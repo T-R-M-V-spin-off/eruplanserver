@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.*;
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
@@ -17,9 +16,6 @@ public class EruplanServerApplication {
 
     @Autowired
     private UtenteRepository utenteRepository;
-
-    @Autowired
-    private DataSource dataSource;
 
     public static void main(String[] args) {
         SpringApplication.run(EruplanServerApplication.class, args);
