@@ -1,5 +1,6 @@
 package it.unisa.eruplanserver.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -25,5 +26,6 @@ public class UtenteEntity {
 
     // Relazione OneToMany con Ordine
     @OneToMany(mappedBy = "utente", cascade = CascadeType.REMOVE)
+    @JsonIgnore
     private List<OrdineEntity> ordini;
 }
