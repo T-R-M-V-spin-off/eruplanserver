@@ -1,4 +1,4 @@
-package it.unisa.eruplanserver.Entity.GUM;
+package it.unisa.eruplanserver.IS.Entity.GUM;
 
 import jakarta.persistence.*;
 import lombok.*;
