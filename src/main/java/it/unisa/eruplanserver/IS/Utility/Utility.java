@@ -1,4 +1,4 @@
-package it.unisa.eruplanserver.Utility;
+package it.unisa.eruplanserver.IS.Utility;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
