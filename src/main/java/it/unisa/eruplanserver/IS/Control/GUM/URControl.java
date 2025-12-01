@@ -1,6 +1,8 @@
 package it.unisa.eruplanserver.IS.Control.GUM;
 
+import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import it.unisa.eruplanserver.IS.Exception.GUM.GUMException;
+import it.unisa.eruplanserver.IS.Exception.GUM.InvalidURDataException;
 import it.unisa.eruplanserver.IS.Exception.GUM.LoginPasswordsMismatchException;
 import it.unisa.eruplanserver.IS.Exception.GUM.URNotFoundException;
 import it.unisa.eruplanserver.IS.Service.GUM.URService;
@@ -24,7 +26,59 @@ public class URControl {
 
     @Autowired
     private URService urService;
+    @RequestMapping(value = "/registra", method = RequestMethod.POST)
+    public void registra(@RequestBody String body, HttpServletRequest request, HttpServletResponse response)
+            throws IOException, GUMException, InvalidURDataException {
 
+        JSONParser parser = new JSONParser();
+
+        try {
+            JSONObject json = (JSONObject) parser.parse(body);
+            String nome = (String) json.get("nome");
+            String cognome = (String) json.get("cognome");
+            String cf = (String) json.get("codiceFiscale");
+            String password = (String) json.get("password");
+            String sesso = (String) json.get("sesso");
+
+            // Validazione
+            if (nome == null || cognome == null || cf == null || password == null || sesso == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        "Errore: tutti i campi sono obbligatori!");
+                return;
+            }
+
+            // Creazione utente
+            UREntity nuovoUtente = new UREntity();
+            nuovoUtente.setNome(nome.trim());
+            nuovoUtente.setCognome(cognome.trim());
+            nuovoUtente.setCodiceFiscale(cf.trim().toUpperCase());
+            nuovoUtente.setPassword(password);
+            nuovoUtente.setSesso(sesso.trim().toUpperCase());
+
+            urService.registra(nuovoUtente);
+
+            response.setStatus(HttpServletResponse.SC_CREATED); // 201 Created
+            response.setContentType("application/json");
+
+            JSONObject successResponse = new JSONObject();
+            successResponse.put("success", true);
+            successResponse.put("message", "Registrazione completata con successo");
+            successResponse.put("codiceFiscale", cf);
+            response.getWriter().write(successResponse.toJSONString());
+
+        } catch (ParseException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Errore: formato JSON non valido");
+
+        } catch (NoSuchAlgorithmException e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Errore tecnico del server");
+
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Errore interno: " + e.getMessage());
+        }
+    }
     /**
      * RF-GUM.25: Gestisce il login del cittadino.
      */
@@ -70,7 +124,6 @@ public class URControl {
             }
         }
     }
-
     /**
      * RF-GUM.26: Gestisce il logout del cittadino.
      */

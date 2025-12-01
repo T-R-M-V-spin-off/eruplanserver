@@ -42,4 +42,34 @@ public class URServiceImpl implements URService {
             throw new LoginPasswordsMismatchException("ERRORE - PASSWORD ERRATA.");
         }
     }
-}
+    @Override
+    @Transactional
+    public void registra(UREntity nuovoUtente) throws InvalidURDataException,NoSuchAlgorithmException {
+        if (!Validator.isCodiceFiscaleValid(nuovoUtente.getCodiceFiscale())) {
+            throw new URNotFoundException("ERRORE - FORMATO CODICE FISCALE NON VALIDO.");
+        }
+        if (!Validator.isPasswordValid(nuovoUtente.getPassword())){
+            throw  new InvalidURDataException("errore: password non valida");
+        }
+        if(!Validator.isNomeValid(nuovoUtente.getNome())){
+            throw new InvalidURDataException("errore: inserisci un nome conforme");
+        }
+        if(!Validator.isSessoValid(nuovoUtente.getSesso())){
+            throw new InvalidURDataException("errore: sesso non identificato");
+        }
+        if (!Validator.isDataNascitaValid(nuovoUtente.getDataDiNascita())) {
+            throw new InvalidURDataException("errore: inserisci una data valida");
+        }
+        if (!Validator.isCognomeValid(nuovoUtente.getCognome())){
+            throw new InvalidURDataException("errore: inserisci un cognome conforme!");
+        }
+        if(urRepository.existsByCodiceFiscale(nuovoUtente.getCodiceFiscale())){
+            throw new InvalidURDataException(("errore: codice fiscale già registrato"));
+        }
+        String passwordOriginale= nuovoUtente.getPassword();
+        String passwordCrittografata=Utility.encrypt(passwordOriginale);
+        nuovoUtente.setPassword(passwordCrittografata);
+        urRepository.save(nuovoUtente);
+    }
+    }
+

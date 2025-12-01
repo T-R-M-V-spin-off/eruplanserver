@@ -3,6 +3,7 @@ package it.unisa.eruplanserver.IS.Repository.GUM;
 import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 @Repository
 public interface URRepository extends JpaRepository<UREntity, Long> {
@@ -14,4 +15,12 @@ public interface URRepository extends JpaRepository<UREntity, Long> {
      * @return L'entità UREntity se trovata, altrimenti null.
      */
     UREntity findByCodiceFiscale(String codiceFiscale);
+    /**
+     * Verifica se essite già qualcuno con questo CF
+     *
+     * @param codiceFiscale Il codice fiscale da verificare
+     * @return true se già esiste, altrimenti false
+     */
+    boolean existsByCodiceFiscale(String codiceFiscale);
+
 }

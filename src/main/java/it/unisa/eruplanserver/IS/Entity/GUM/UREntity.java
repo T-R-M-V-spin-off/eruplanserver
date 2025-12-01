@@ -34,4 +34,5 @@ public class UREntity {
 
     @Column(nullable = false, length = 1)
     private String sesso;
+
 }

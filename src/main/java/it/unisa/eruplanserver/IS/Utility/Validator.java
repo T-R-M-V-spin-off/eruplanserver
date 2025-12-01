@@ -1,6 +1,7 @@
 package it.unisa.eruplanserver.IS.Utility;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -22,8 +23,8 @@ public class Validator {
     private static final Pattern NOME_PERSONA_PATTERN = Pattern.compile(NOME_PERSONA_REGEX);
     private static final String CODICE_FISCALE_REGEX = "^[A-Za-z0-9]{16}$";
     private static final Pattern CODICE_FISCALE_PATTERN = Pattern.compile(CODICE_FISCALE_REGEX);
-
-
+    private static final String COGNOME_PERSONA_REGEX="^[a-zA-Z\\s]{2,30}$";
+    private static final Pattern COGNOME_PERSONA_PATTERN = Pattern.compile(COGNOME_PERSONA_REGEX);
     /*
      * METODI DI VALIDAZIONE
      */
@@ -46,6 +47,10 @@ public class Validator {
     public static boolean isPasswordValid(String password) {
         if (password == null || password.compareTo("") == 0) return false;
         return PASSWORD_PATTERN.matcher(password).matches();
+    }
+    public static boolean isCognomeValid(String cognome){
+        if (cognome == null || cognome.compareTo("") == 0) return false;
+        return COGNOME_PERSONA_PATTERN.matcher(cognome).matches();
     }
 
     public static boolean isDataNascitaValid(LocalDate data) {
