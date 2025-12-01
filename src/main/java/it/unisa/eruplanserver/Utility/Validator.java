@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 public class Validator {
 
     /*
-     * REGEX E PATTERN GUM
+     * REGEX E PATTERN it.unisa.eruplanserver.Repository.GUM
      */
 
     private static final String SESSO_REGEX = "^[MF]$";
