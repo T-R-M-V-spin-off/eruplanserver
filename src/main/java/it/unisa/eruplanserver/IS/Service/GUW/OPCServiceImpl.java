@@ -22,22 +22,14 @@ public class OPCServiceImpl implements OPCService {
     public void login(String codiceFiscale, String password)
             throws NoSuchAlgorithmException, OPCNotFoundException, LoginPasswordsMismatchException {
 
-        // 1. Validazione Formale
-        // Nota: Validator è nel package IS.Utility
         if (!Validator.isCodiceFiscaleValid(codiceFiscale)) {
             throw new OPCNotFoundException("ERRORE - FORMATO CODICE FISCALE NON VALIDO.");
         }
 
-        // 2. Cerca nel DB (CORREZIONE ERRORE: Nessun Optional, oggetto diretto)
         OPCEntity operatore = opcRepository.findByCodiceFiscale(codiceFiscale);
-
-        // Controlliamo se è null come fa il PM in UtenteServiceImpl
         if (operatore == null) {
             throw new OPCNotFoundException("ERRORE - OPERATORE NON TROVATO.");
         }
-
-        // 3. Verifica Password
-        // Nota: Utility è nel package IS.Utility
         String passwordHash = Utility.encrypt(password);
 
         if (!passwordHash.equals(operatore.getPassword())) {
