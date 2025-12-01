@@ -67,4 +67,20 @@ public class OPCControl {
             }
         }
     }
+
+    /**
+     * Gestisce il logout dell'operatore (RF-GUW.28).
+     * Invalida la sessione corrente rimuovendo tutti i dati salvati.
+     */
+    @RequestMapping(value = "/logout", method = RequestMethod.POST)
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+
+        // Recupera la sessione corrente, ma NON ne crea una nuova se non esiste (false)
+        if (request.getSession(false) != null) {
+            request.getSession().invalidate(); // Distrugge la sessione e il JSESSIONID lato server
+        }
+
+        // Risponde 200 OK
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
 }
