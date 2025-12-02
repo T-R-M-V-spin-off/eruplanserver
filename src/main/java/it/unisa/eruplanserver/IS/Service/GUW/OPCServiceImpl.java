@@ -21,7 +21,6 @@ public class OPCServiceImpl implements OPCService {
     @Transactional
     public void login(String codiceFiscale, String password)
             throws NoSuchAlgorithmException, OPCNotFoundException, LoginPasswordsMismatchException {
-
         if (!Validator.isCodiceFiscaleValid(codiceFiscale)) {
             throw new OPCNotFoundException("ERRORE - FORMATO CODICE FISCALE NON VALIDO.");
         }

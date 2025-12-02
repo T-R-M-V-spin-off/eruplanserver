@@ -16,7 +16,7 @@ public interface URRepository extends JpaRepository<UREntity, Long> {
      */
     UREntity findByCodiceFiscale(String codiceFiscale);
     /**
-     * Verifica se essite già qualcuno con questo CF
+     * Verifica se esiste già qualcuno con questo CF
      *
      * @param codiceFiscale Il codice fiscale da verificare
      * @return true se già esiste, altrimenti false

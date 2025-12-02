@@ -16,9 +16,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/gestoreUtentiMobile") // URL ipotizzato per il modulo GUM
@@ -26,6 +29,8 @@ public class URControl {
 
     @Autowired
     private URService urService;
+
+    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     @RequestMapping(value = "/registra", method = RequestMethod.POST)
     public void registra(@RequestBody String body, HttpServletRequest request, HttpServletResponse response)
             throws IOException, GUMException, InvalidURDataException {
@@ -34,14 +39,22 @@ public class URControl {
 
         try {
             JSONObject json = (JSONObject) parser.parse(body);
+
             String nome = (String) json.get("nome");
             String cognome = (String) json.get("cognome");
             String cf = (String) json.get("codiceFiscale");
             String password = (String) json.get("password");
             String sesso = (String) json.get("sesso");
 
+            String dataStr = (String) json.get("dataNascita");
+            LocalDate dataNascita = null;
+
+            if (dataStr != null && !dataStr.isEmpty()) {
+                dataNascita = LocalDate.parse(dataStr, FORMATO_DATA);
+            }
+
             // Validazione
-            if (nome == null || cognome == null || cf == null || password == null || sesso == null) {
+            if (nome == null || cognome == null || cf == null || password == null || sesso == null || dataNascita == null) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                         "Errore: tutti i campi sono obbligatori!");
                 return;
@@ -54,6 +67,7 @@ public class URControl {
             nuovoUtente.setCodiceFiscale(cf.trim().toUpperCase());
             nuovoUtente.setPassword(password);
             nuovoUtente.setSesso(sesso.trim().toUpperCase());
+            nuovoUtente.setDataDiNascita(dataNascita);
 
             urService.registra(nuovoUtente);
 
@@ -69,7 +83,8 @@ public class URControl {
         } catch (ParseException e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "Errore: formato JSON non valido");
-
+        } catch (DateTimeParseException e) {
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Formato data errato. Usa: GG-MM-AAAA");
         } catch (NoSuchAlgorithmException e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Errore tecnico del server");
