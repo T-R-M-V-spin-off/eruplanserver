@@ -9,14 +9,18 @@ public class Validator {
     /*
      * REGEX E PATTERN it.unisa.eruplanserver.Repository.GUM
      */
-
     private static final String SESSO_REGEX = "^[MF]$";
     private static final Pattern SESSO_PATTERN = Pattern.compile(SESSO_REGEX);
 
     /*
+     * REGEX E PATTERN GPE (Nuovi)
+     */
+    private static final String NOME_PIANO_REGEX = "^[a-zA-Z0-9\\s]{3,35}$";
+    private static final Pattern NOME_PIANO_PATTERN = Pattern.compile(NOME_PIANO_REGEX);
+
+    /*
      * REGEX E PATTERN COMUNI
      */
-
     private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$";
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
     private static final String NOME_PERSONA_REGEX = "^[a-zA-Z\\s]{2,30}$";
@@ -25,10 +29,10 @@ public class Validator {
     private static final Pattern CODICE_FISCALE_PATTERN = Pattern.compile(CODICE_FISCALE_REGEX);
     private static final String COGNOME_PERSONA_REGEX="^[a-zA-Z\\s]{2,30}$";
     private static final Pattern COGNOME_PERSONA_PATTERN = Pattern.compile(COGNOME_PERSONA_REGEX);
+
     /*
      * METODI DI VALIDAZIONE
      */
-
     public static boolean isNomeValid(String nome) {
         if (nome == null || nome.compareTo("") == 0) return false;
         return NOME_PERSONA_PATTERN.matcher(nome).matches();
@@ -55,5 +59,18 @@ public class Validator {
 
     public static boolean isDataNascitaValid(LocalDate data) {
         return data != null && data.isBefore(LocalDate.now());
+    }
+
+    /**
+     * Verifica se il nome del piano di evacuazione è valido.
+     *
+     * @param nomePiano Il nome da verificare
+     * @return true se valido, false altrimenti
+     */
+    public static boolean isNomePianoValid(String nomePiano) {
+        if (nomePiano == null || nomePiano.trim().isEmpty()) {
+            return false;
+        }
+        return NOME_PIANO_PATTERN.matcher(nomePiano.trim()).matches();
     }
 }
