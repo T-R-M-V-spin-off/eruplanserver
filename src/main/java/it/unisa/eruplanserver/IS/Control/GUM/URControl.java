@@ -81,17 +81,17 @@ public class URControl {
             response.getWriter().write(successResponse.toJSONString());
 
         } catch (ParseException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    "Errore: formato JSON non valido");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Errore: formato JSON non valido");
         } catch (DateTimeParseException e) {
-                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Formato data errato. Usa: GG-MM-AAAA");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Formato data errato. Usa: GG-MM-AAAA");
+        } catch (InvalidURDataException | URNotFoundException e) {
+            //Catturiamo l'errore di validazione e restituiamo 400 invece di 500
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (NoSuchAlgorithmException e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Errore tecnico del server");
-
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Errore tecnico del server");
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    "Errore interno: " + e.getMessage());
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Errore interno: " + e.getMessage());
         }
     }
     /**
