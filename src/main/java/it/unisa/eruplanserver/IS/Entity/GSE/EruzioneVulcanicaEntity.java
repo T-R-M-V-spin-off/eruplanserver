@@ -25,5 +25,4 @@ public class EruzioneVulcanicaEntity {
     @Column (name="descrizione", length = 1000) private String descrizione;
 
 
-
 }
