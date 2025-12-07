@@ -1,5 +1,6 @@
 package it.unisa.eruplanserver.IS.Entity.GUM;
 
+import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -35,4 +36,7 @@ public class UREntity {
     @Column(nullable = false, length = 1)
     private String sesso;
 
+    @ManyToOne
+    @JoinColumn(name = "nucleo_id")
+    private NucleoFamiliareEntity nucleoFamiliare;
 }

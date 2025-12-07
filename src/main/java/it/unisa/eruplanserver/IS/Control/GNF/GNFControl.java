@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 
 import java.util.List;
 
@@ -78,5 +79,50 @@ public class GNFControl {
         if (cfUtente == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
         return ResponseEntity.ok(gnfService.getRichiestePendenti(cfUtente));
+    }
+
+    // RF-GNF.09: Aggiungi Appoggio
+    @PostMapping("/appoggi/aggiungi")
+    public ResponseEntity<String> aggiungiAppoggio(@RequestBody AppoggioEntity appoggio, HttpServletRequest request) {
+        String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
+        if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
+
+        try {
+            gnfService.aggiungiAppoggio(cfAdmin, appoggio);
+            return ResponseEntity.ok("Appoggio aggiunto con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    //Mostra schermata con luoghi sicuri
+    @GetMapping("/appoggi")
+    public ResponseEntity<List<AppoggioEntity>> getAppoggi(HttpServletRequest request) {
+        String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
+        if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            List<AppoggioEntity> appoggi = gnfService.getAppoggi(cfAdmin);
+            return ResponseEntity.ok(appoggi);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // RF-GNF.10 : Rimozione di appoggio
+    @DeleteMapping("/appoggi/rimuovi/{id}")
+    public ResponseEntity<String> rimuoviAppoggio(@PathVariable Long id, HttpServletRequest request) {
+        String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
+        if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("ID appoggio non valido.");
+        }
+
+        try {
+            gnfService.rimuoviAppoggio(cfAdmin, id);
+            return ResponseEntity.ok("Appoggio rimosso con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

@@ -33,4 +33,8 @@ public class NucleoFamiliareEntity {
     // Lista dei membri aggiunti manualmente (RF-GNF.03)
     @OneToMany(mappedBy = "nucleoFamiliare", cascade = CascadeType.ALL)
     private List<MembroEntity> membriManuali;
+
+    // RF-GNF.09: Lista dei luoghi sicuri/appoggi
+    @OneToMany(mappedBy = "nucleoFamiliare", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AppoggioEntity> appoggi;
 }

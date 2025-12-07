@@ -18,6 +18,12 @@ public class Validator {
     private static final String NOME_PIANO_REGEX = "^[a-zA-Z0-9\\s]{3,35}$";
     private static final Pattern NOME_PIANO_PATTERN = Pattern.compile(NOME_PIANO_REGEX);
 
+    // REGEX e PATTERN Indirizzi
+    private static final String CAP_REGEX = "^\\d{5}$";
+    private static final String CIVICO_REGEX = "^[0-9a-zA-Z/\\s]{1,6}$"; //
+    private static final Pattern CAP_PATTERN = Pattern.compile(CAP_REGEX);
+    private static final Pattern CIVICO_PATTERN = Pattern.compile(CIVICO_REGEX);
+
     /*
      * REGEX E PATTERN COMUNI
      */
@@ -72,5 +78,17 @@ public class Validator {
             return false;
         }
         return NOME_PIANO_PATTERN.matcher(nomePiano.trim()).matches();
+    }
+
+    public static boolean isIndirizzoValid(String via, String civico, String comune, String cap, String provincia, String regione, String paese) {
+        if (via == null || via.length() < 1 || via.length() > 40) return false;
+        if (civico == null || !CIVICO_PATTERN.matcher(civico).matches()) return false;
+        if (comune == null || comune.length() < 2 || comune.length() > 40) return false;
+        if (cap == null || !CAP_PATTERN.matcher(cap).matches()) return false;
+        if (provincia == null || provincia.length() < 4 || provincia.length() > 20) return false;
+        if (regione == null || regione.length() < 5 || regione.length() > 25) return false;
+        if (paese == null || paese.length() < 4 || paese.length() > 40) return false;
+
+        return true;
     }
 }

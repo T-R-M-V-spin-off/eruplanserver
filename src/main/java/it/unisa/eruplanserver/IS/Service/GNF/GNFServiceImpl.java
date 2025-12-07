@@ -7,6 +7,8 @@ import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
+import it.unisa.eruplanserver.IS.Utility.Validator;
 
 import java.util.List;
 
@@ -17,6 +19,7 @@ public class GNFServiceImpl implements GNFService {
     @Autowired private RichiestaAccessoRepository richiestaRepository;
     @Autowired private URRepository urRepository;
     @Autowired private MembroRepository membroRepository;
+    @Autowired private AppoggioRepository appoggioRepository;
 
     // RF-GNF.01: Invita una persona
     public void invitaUtente(String cfAdmin, String cfInvitato) throws Exception {
@@ -85,5 +88,50 @@ public class GNFServiceImpl implements GNFService {
     public List<RichiestaAccessoEntity> getRichiestePendenti(String cfUtente) {
         UREntity utente = urRepository.findByCodiceFiscale(cfUtente);
         return richiestaRepository.findByUtenteInvitatoIdAndStato(utente.getId(), "PENDING");
+    }
+
+    // RF-GNF.09: Aggiunta Appoggio
+    @Override
+    public void aggiungiAppoggio(String cfAdmin, AppoggioEntity appoggio) throws Exception {
+        UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
+        if (admin == null || admin.getNucleoFamiliare() == null) {
+            throw new Exception("Utente non autorizzato o nucleo non esistente.");
+        }
+        if (!Validator.isIndirizzoValid(
+                appoggio.getViaPiazza(), appoggio.getCivico(), appoggio.getComune(),
+                appoggio.getCap(), appoggio.getProvincia(), appoggio.getRegione(), appoggio.getPaese())) {
+            throw new Exception("Dati indirizzo non validi.");
+        }
+
+        appoggio.setNucleoFamiliare(admin.getNucleoFamiliare());
+        appoggioRepository.save(appoggio);
+    }
+
+    // RF-GNF.10: Rimozione Appoggio
+    @Override
+    public void rimuoviAppoggio(String cfAdmin, Long idAppoggio) throws Exception {
+        UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
+        if (admin == null || admin.getNucleoFamiliare() == null) {
+            throw new Exception("Utente non autorizzato.");
+        }
+
+        AppoggioEntity appoggio = appoggioRepository.findById(idAppoggio)
+                .orElseThrow(() -> new Exception("Appoggio non trovato."));
+
+        // Controllo di sicurezza: l'appoggio deve appartenere al nucleo dell'admin richiedente
+        if (!appoggio.getNucleoFamiliare().getId().equals(admin.getNucleoFamiliare().getId())) {
+            throw new Exception("Non puoi eliminare un appoggio che non ti appartiene.");
+        }
+
+        appoggioRepository.delete(appoggio);
+    }
+
+    @Override
+    public List<AppoggioEntity> getAppoggi(String cfAdmin) throws Exception {
+        UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
+        if (admin == null || admin.getNucleoFamiliare() == null) {
+            throw new Exception("Utente non autorizzato o nucleo inesistente.");
+        }
+        return admin.getNucleoFamiliare().getAppoggi();
     }
 }

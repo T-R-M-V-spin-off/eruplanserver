@@ -2,6 +2,7 @@ package it.unisa.eruplanserver.IS.Service.GNF;
 
 import it.unisa.eruplanserver.IS.Entity.GNF.MembroEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.RichiestaAccessoEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import java.util.List;
 
 public interface GNFService {
@@ -38,4 +39,17 @@ public interface GNFService {
      * @return Lista di richieste
      */
     List<RichiestaAccessoEntity> getRichiestePendenti(String cfUtente);
+
+    /**
+     * RF-GNF.09: Aggiunge un appoggio al nucleo familiare.
+     */
+    void aggiungiAppoggio(String cfAdmin, AppoggioEntity appoggio) throws Exception;
+
+    /**
+     * RF-GNF.10: Rimuove un appoggio dal nucleo familiare.
+     */
+    void rimuoviAppoggio(String cfAdmin, Long idAppoggio) throws Exception;
+
+    // RF-GNF.09/10: Recupera la lista degli appoggi
+    List<AppoggioEntity> getAppoggi(String cfAdmin) throws Exception;
 }
