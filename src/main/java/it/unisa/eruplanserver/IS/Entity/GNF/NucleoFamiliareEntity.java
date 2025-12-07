@@ -20,6 +20,15 @@ public class NucleoFamiliareEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // --- NUOVI CAMPI (RF-GNF.07) ---
+    private boolean hasVeicolo;
+    private int numeroPostiVeicolo;
+
+    // Collegamento alla nuova tabella Residenza (Indirizzo)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "residenza_id", referencedColumnName = "id")
+    private ResidenzaEntity residenza;
+
     // L'utente che ha creato il nucleo (Amministratore del nucleo)
     @OneToOne
     @JoinColumn(name = "admin_id", nullable = false)
