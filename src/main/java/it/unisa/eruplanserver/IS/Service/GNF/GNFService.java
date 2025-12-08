@@ -3,6 +3,7 @@ package it.unisa.eruplanserver.IS.Service.GNF;
 import it.unisa.eruplanserver.IS.Entity.GNF.MembroEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.RichiestaAccessoEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
 import java.util.List;
 
 public interface GNFService {
@@ -52,4 +53,11 @@ public interface GNFService {
 
     // RF-GNF.09/10: Recupera la lista degli appoggi
     List<AppoggioEntity> getAppoggi(String cfAdmin) throws Exception;
+
+    /**
+     * RF-GNF.23: Modifica la residenza associata al nucleo familiare.
+     * @param cfAdmin codice fiscale dell'utente (deve essere admin del nucleo)
+     * @param residenza nuova residenza da associare
+     */
+    void modificaResidenza(String cfAdmin, ResidenzaEntity residenza) throws Exception;
 }
