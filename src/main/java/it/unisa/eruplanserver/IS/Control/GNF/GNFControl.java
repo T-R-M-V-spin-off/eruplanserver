@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
 
@@ -23,9 +25,12 @@ public class GNFControl {
     @Autowired
     private GNFServiceImpl gnfService;
 
+    private static final Logger logger = LoggerFactory.getLogger(GNFControl.class);
+
     // RF-GNF.07: Visualizza Nucleo
     @GetMapping("/membri")
     public ResponseEntity<?> getMembri(HttpServletRequest request) {
+        logger.info("GET /gestoreNucleo/membri called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         // 1. Recupero il CF dalla sessione
         String cfUtente = (String) request.getSession().getAttribute("codiceFiscale");
 
@@ -48,6 +53,7 @@ public class GNFControl {
     // RF-GNF.01: Invita utente
     @PostMapping("/invita")
     public ResponseEntity<String> invitaUtente(@RequestParam String cfInvitato, HttpServletRequest request) {
+        logger.info("POST /gestoreNucleo/invita called - cfInvitato: {} - sessionId: {}", cfInvitato, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 
@@ -62,6 +68,7 @@ public class GNFControl {
     // RF-GNF.02: Accetta invito
     @PostMapping("/accetta/{idRichiesta}")
     public ResponseEntity<String> accettaInvito(@PathVariable Long idRichiesta) {
+        logger.info("POST /gestoreNucleo/accetta called - idRichiesta: {}", idRichiesta);
         try {
             gnfService.accettaInvito(idRichiesta);
             return ResponseEntity.ok("Benvenuto nel nucleo!");
@@ -73,6 +80,7 @@ public class GNFControl {
     // RF-GNF.03: Aggiungi Membro Manuale
     @PostMapping("/aggiungiMembro")
     public ResponseEntity<String> aggiungiMembro(@RequestBody MembroEntity membro, HttpServletRequest request) {
+        logger.info("POST /gestoreNucleo/aggiungiMembro called - membro: {} - sessionId: {}", membro, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 
@@ -87,6 +95,7 @@ public class GNFControl {
     // RF-GNF.04: Abbandona Nucleo
     @PostMapping("/abbandona")
     public ResponseEntity<String> abbandonaNucleo(HttpServletRequest request) {
+        logger.info("POST /gestoreNucleo/abbandona called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfUtente = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfUtente == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 
@@ -101,6 +110,7 @@ public class GNFControl {
     // RF-GNF.06: Visualizza lista richieste
     @GetMapping("/richieste")
     public ResponseEntity<List<RichiestaAccessoEntity>> getRichieste(HttpServletRequest request) {
+        logger.info("GET /gestoreNucleo/richieste called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfUtente = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfUtente == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
@@ -110,6 +120,7 @@ public class GNFControl {
     // RF-GNF.09: Aggiungi Appoggio
     @PostMapping("/appoggi/aggiungi")
     public ResponseEntity<String> aggiungiAppoggio(@RequestBody AppoggioEntity appoggio, HttpServletRequest request) {
+        logger.info("POST /gestoreNucleo/appoggi/aggiungi called - appoggio: {} - sessionId: {}", appoggio, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 
@@ -124,6 +135,7 @@ public class GNFControl {
     //Mostra schermata con luoghi sicuri
     @GetMapping("/appoggi")
     public ResponseEntity<List<AppoggioEntity>> getAppoggi(HttpServletRequest request) {
+        logger.info("GET /gestoreNucleo/appoggi called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
@@ -138,6 +150,7 @@ public class GNFControl {
     // RF-GNF.10 : Rimozione di appoggio
     @DeleteMapping("/appoggi/rimuovi/{id}")
     public ResponseEntity<String> rimuoviAppoggio(@PathVariable Long id, HttpServletRequest request) {
+        logger.info("DELETE /gestoreNucleo/appoggi/rimuovi/{} called - sessionId: {}", id, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
         if (id == null || id <= 0) {
@@ -154,6 +167,7 @@ public class GNFControl {
     //RF-GNF.08: Creazione del nucleo familiare
     @PostMapping("/crea")
     public ResponseEntity<?> creaNucleoFamiliare(@RequestBody CreazioneNucleoRequest request, HttpServletRequest httpRequest) {
+        logger.info("POST /gestoreNucleo/crea called - request: {} - sessionId: {}", request, (httpRequest.getSession(false) != null) ? httpRequest.getSession(false).getId() : "no-session");
         String cfUtente = (String) httpRequest.getSession().getAttribute("codiceFiscale");
         if(cfUtente==null){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
@@ -174,6 +188,7 @@ public class GNFControl {
     // RF-GNF.23: Modifica residenza del nucleo
     @PostMapping("/residenza/modifica")
     public ResponseEntity<String> modificaResidenza(@RequestBody ResidenzaEntity residenza, HttpServletRequest request) {
+        logger.info("POST /gestoreNucleo/residenza/modifica called - residenza: {} - sessionId: {}", residenza, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 

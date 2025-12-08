@@ -9,6 +9,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -19,11 +21,14 @@ public class GPEControl {
     @Autowired
     private GPEService gpeService;
 
+    private static final Logger logger = LoggerFactory.getLogger(GPEControl.class);
+
     /**
      * Gestisce la richiesta di generazione di un piano di evacuazione.
      */
     @PostMapping("/genera")
     public void generaPiano(@RequestBody String body, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        logger.info("POST /gestorePiani/genera called - body: {} - sessionId: {}", body, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         JSONParser parser = new JSONParser();
         try {
             // Verifica sessione operatore (GUW)

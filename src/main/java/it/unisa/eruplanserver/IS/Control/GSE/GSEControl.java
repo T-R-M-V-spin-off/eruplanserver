@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ public class GSEControl {
     @Autowired
     private GSEService gseService;
 
+    private static final Logger logger = LoggerFactory.getLogger(GSEControl.class);
+
     /**
      * RF-GSE.21: Visualizza lista partecipanti (con stato salvo/non salvo).
      * Endpoint: GET /gestoreStorico/piani/{idPiano}
@@ -27,6 +31,8 @@ public class GSEControl {
     public ResponseEntity<?> visualizzaPiani(
             @PathVariable Long idPiano,
             HttpServletRequest request) {
+
+        logger.info("GET /gestoreStorico/piani/{} called - sessionId: {}", idPiano, (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
 
         // ---- Controllo autenticazione OPC ----
         Boolean isOperatore = (Boolean) request.getSession().getAttribute("isOperatore");
@@ -60,6 +66,7 @@ public class GSEControl {
          */
     }
     @GetMapping("/eruzioni") public ResponseEntity<?> getListaEruzioni(HttpServletRequest request) {
+        logger.info("GET /gestoreStorico/eruzioni called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         Boolean isOperatore = (Boolean) request.getSession().getAttribute("isOperatore");
         if (isOperatore == null || !isOperatore) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("ACCESSO NEGATO. Devi essere un operatore (OPC) loggato.");
@@ -75,6 +82,7 @@ public class GSEControl {
         }
     }
     @GetMapping("/eruzioni/ordine/crescente") public ResponseEntity<?> getEruzioniOrdineCrescente(HttpServletRequest request) {
+        logger.info("GET /gestoreStorico/eruzioni/ordine/crescente called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         Boolean isOperatore = (Boolean) request.getSession().getAttribute("isOperatore");
         if (isOperatore == null || !isOperatore) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("ACCESSO NEGATO. Devi essere un operatore (OPC) loggato.");
@@ -90,6 +98,7 @@ public class GSEControl {
         }
     }
     @GetMapping("/eruzioni/ordine/decrescente") public ResponseEntity<?> getEruzioniOrdineDecrescente(HttpServletRequest request) {
+        logger.info("GET /gestoreStorico/eruzioni/ordine/decrescente called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         Boolean isOperatore = (Boolean) request.getSession().getAttribute("isOperatore");
         if (isOperatore == null || !isOperatore) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("ACCESSO NEGATO. Devi essere un operatore (OPC) loggato.");

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+envlocal.env
+pom.xml
+.gitignore
+pom.xml
+pom.xml

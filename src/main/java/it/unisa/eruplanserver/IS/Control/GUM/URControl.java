@@ -16,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -30,12 +32,15 @@ public class URControl {
     @Autowired
     private URService urService;
 
+    private static final Logger logger = LoggerFactory.getLogger(URControl.class);
+
     private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     @RequestMapping(value = "/registra", method = RequestMethod.POST)
     public void registra(@RequestBody String body, HttpServletRequest request, HttpServletResponse response)
             throws IOException, GUMException, InvalidURDataException {
 
         JSONParser parser = new JSONParser();
+        logger.info("POST /gestoreUtentiMobile/registra called - body: {}", body);
 
         try {
             JSONObject json = (JSONObject) parser.parse(body);
@@ -102,6 +107,7 @@ public class URControl {
             throws GUMException {
 
         JSONParser parser = new JSONParser();
+        logger.info("POST /gestoreUtentiMobile/login called - body: {}", body);
 
         try {
             JSONObject json = (JSONObject) parser.parse(body);
@@ -144,6 +150,7 @@ public class URControl {
      */
     @RequestMapping(value = "/logout", method = RequestMethod.GET)
     public void logout(HttpServletRequest request, HttpServletResponse response) {
+        logger.info("GET /gestoreUtentiMobile/logout called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
         // Invalida la sessione esistente rimuovendo tutti gli attributi
         if (request.getSession(false) != null) {
             request.getSession().invalidate();

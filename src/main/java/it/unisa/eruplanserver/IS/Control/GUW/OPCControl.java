@@ -14,6 +14,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -25,6 +27,8 @@ public class OPCControl {
     @Autowired
     private OPCService opcService;
 
+    private static final Logger logger = LoggerFactory.getLogger(OPCControl.class);
+
     /**
      * Gestisce il login dell'operatore.
      */
@@ -33,6 +37,7 @@ public class OPCControl {
             throws GUWException {
 
         JSONParser parser = new JSONParser();
+        logger.info("POST /gestoreUtentiWeb/login called - body: {}", body);
 
         try {
             JSONObject json = (JSONObject) parser.parse(body);
@@ -74,6 +79,8 @@ public class OPCControl {
      */
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
     public void logout(HttpServletRequest request, HttpServletResponse response) {
+
+        logger.info("POST /gestoreUtentiWeb/logout called - sessionId: {}", (request.getSession(false) != null) ? request.getSession(false).getId() : "no-session");
 
         // Recupera la sessione corrente, ma NON ne crea una nuova se non esiste (false)
         if (request.getSession(false) != null) {
