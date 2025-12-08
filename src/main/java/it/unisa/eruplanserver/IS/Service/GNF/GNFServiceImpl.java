@@ -14,7 +14,6 @@ import java.util.List;
 
 @Service
 public class GNFServiceImpl implements GNFService {
-
     @Autowired
     private NucleoFamiliareRepository nucleoRepository;
     @Autowired
@@ -25,6 +24,8 @@ public class GNFServiceImpl implements GNFService {
     private MembroRepository membroRepository;
     @Autowired
     private AppoggioRepository appoggioRepository;
+    @Autowired
+    private ResidenzaRepository residenzaRepository; // nuovo repository per Residenza
 
     // RF-GNF.01: Invita una persona
     public void invitaUtente(String cfAdmin, String cfInvitato) throws Exception {
@@ -207,5 +208,46 @@ public class GNFServiceImpl implements GNFService {
 
         // 3. Restituisco tutti i membri di quel nucleo
         return membroRepository.findByNucleoFamiliare(nucleo);
+    }
+
+    /**
+     * RF-GNF.23: Modifica la residenza associata al nucleo.
+     */
+    @Override
+    public void modificaResidenza(String cfAdmin, ResidenzaEntity residenza) throws Exception {
+        UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
+        if (admin == null) throw new Exception("Utente non trovato.");
+        NucleoFamiliareEntity nucleo = admin.getNucleoFamiliare();
+        if (nucleo == null) throw new Exception("Utente non associato a nessun nucleo.");
+
+        // Verifica che l'utente sia effettivamente l'admin del nucleo
+        if (!nucleo.getAdmin().getId().equals(admin.getId())) {
+            throw new Exception("Permessi insufficienti: devi essere amministratore del nucleo.");
+        }
+
+        // Validazione dati indirizzo
+        if (!Validator.isIndirizzoValid(
+                residenza.getViaPiazza(), residenza.getCivico(), residenza.getComune(),
+                residenza.getCap(), null, residenza.getRegione(), residenza.getPaese())) {
+            throw new Exception("Dati residenza non validi.");
+        }
+
+        // Se il nucleo ha già una residenza, aggiorna i campi; altrimenti crea una nuova
+        ResidenzaEntity current = nucleo.getResidenza();
+        if (current == null) {
+            // Salva la nuova residenza e collega al nucleo
+            ResidenzaEntity saved = residenzaRepository.save(residenza);
+            nucleo.setResidenza(saved);
+            nucleoRepository.save(nucleo);
+        } else {
+            // Aggiorna i campi della residenza esistente
+            current.setViaPiazza(residenza.getViaPiazza());
+            current.setCivico(residenza.getCivico());
+            current.setComune(residenza.getComune());
+            current.setCap(residenza.getCap());
+            current.setRegione(residenza.getRegione());
+            current.setPaese(residenza.getPaese());
+            residenzaRepository.save(current);
+        }
     }
 }
