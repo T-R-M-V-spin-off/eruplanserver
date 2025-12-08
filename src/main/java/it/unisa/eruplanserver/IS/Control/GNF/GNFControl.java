@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.AggiornaVeicoloRequest;
 
 import java.util.List;
 
@@ -164,6 +165,21 @@ public class GNFControl {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    //RF-GNF.12: aggiorna dati del veicolo
+    @PutMapping("/veicolo")
+    public ResponseEntity<String> aggiornaveicolo(@RequestBody AggiornaVeicoloRequest request, HttpServletRequest httpRequest) {
+        String cfAdmin = (String) httpRequest.getSession().getAttribute("codiceFiscale");
+        if(cfAdmin==null){
+            return ResponseEntity.badRequest().body("Login richiesto");
+        }try {
+            gnfService.aggiornaVeicolo(cfAdmin, request.isHasVeicolo(), request.getNumeroPostiVeicolo());
+            return ResponseEntity.ok("dati aggiornati con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("errore" + e.getMessage());
+        }
+        }
+
+
     //RF-GNF.08: Creazione del nucleo familiare
     @PostMapping("/crea")
     public ResponseEntity<?> creaNucleoFamiliare(@RequestBody CreazioneNucleoRequest request, HttpServletRequest httpRequest) {
@@ -182,8 +198,12 @@ public class GNFControl {
             return ResponseEntity.ok(nucleoCreato);
         }catch (Exception e){
             return ResponseEntity.badRequest().body("errore. "+ e.getMessage());
+
         }
     }
+
+
+
 
     // RF-GNF.23: Modifica residenza del nucleo
     @PostMapping("/residenza/modifica")
