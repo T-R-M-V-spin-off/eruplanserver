@@ -13,11 +13,33 @@ import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import java.util.List;
 
 @RestController
-@RequestMapping("/gestoreNucleo")
+@RequestMapping("/gestoreNucleo") // URL Base confermato dal team
 public class GNFControl {
 
     @Autowired
     private GNFServiceImpl gnfService;
+
+    // RF-GNF.07: Visualizza Nucleo
+    @GetMapping("/membri")
+    public ResponseEntity<?> getMembri(HttpServletRequest request) {
+        // 1. Recupero il CF dalla sessione
+        String cfUtente = (String) request.getSession().getAttribute("codiceFiscale");
+
+        if (cfUtente == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
+        }
+
+        try {
+            // 2. Chiamata al service
+            // Restituisce la lista di MembroEntity (con campi e date formattati come stringhe per il mobile)
+            List<MembroEntity> membri = gnfService.visualizzaNucleo(cfUtente);
+
+            // 3. Ritorna HTTP 200 con il JSON Array
+            return ResponseEntity.ok(membri);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     // RF-GNF.01: Invita utente
     @PostMapping("/invita")

@@ -1,9 +1,12 @@
 package it.unisa.eruplanserver.IS.Entity.GNF;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
+// import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity; // (Già presente nel package)
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+
+// [MODIFICA RICHIESTA] Rimosso LocalDate per usare String come vuole il mobile
+// import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -27,15 +30,22 @@ public class MembroEntity {
     @Column(length = 16)
     private String codiceFiscale;
 
-    private LocalDate dataNascita;
+    // Lato Mobile (riga 136): m.setDataDiNascita(obj.optString("dataDiNascita"));
+    // Il mobile si aspetta una Stringa, non un oggetto Date.
+    private String dataDiNascita;
+
     private String sesso;
 
-    // Checkbox dello scenario
-    private boolean richiedeAssistenza;
-    private boolean isMinorenne;
+    // Lato Mobile (riga 138): m.setAssistenza(obj.optBoolean("assistenza"));
+    // Deve chiamarsi "assistenza", non "richiedeAssistenza".
+    private boolean assistenza;
+
+    // Lato Mobile (riga 139): m.setMinorenne(obj.optBoolean("minorenne"));
+    // Deve chiamarsi "minorenne", non "isMinorenne".
+    private boolean minorenne;
 
     @ManyToOne
     @JoinColumn(name = "nucleo_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // Essenziale per evitare loop infiniti nel JSON
     private NucleoFamiliareEntity nucleoFamiliare;
 }

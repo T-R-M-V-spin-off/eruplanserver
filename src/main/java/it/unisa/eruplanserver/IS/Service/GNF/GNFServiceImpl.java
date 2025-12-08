@@ -134,4 +134,23 @@ public class GNFServiceImpl implements GNFService {
         }
         return admin.getNucleoFamiliare().getAppoggi();
     }
+
+    // Implementazione requisito Visualizza Nucleo
+    // Recupera l'utente dal CF, risale al nucleo, e restituisce la lista dei parenti.
+    public List<MembroEntity> visualizzaNucleo(String cfRichiedente) {
+
+        // 1. Cerco l'utente che ha fatto la richiesta
+        MembroEntity richiedente = membroRepository.findByCodiceFiscale(cfRichiedente)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato nel sistema."));
+
+        // 2. Recupero il nucleo familiare associato
+        NucleoFamiliareEntity nucleo = richiedente.getNucleoFamiliare();
+
+        if (nucleo == null) {
+            throw new RuntimeException("L'utente non appartiene ad alcun nucleo familiare.");
+        }
+
+        // 3. Restituisco tutti i membri di quel nucleo
+        return membroRepository.findByNucleoFamiliare(nucleo);
+    }
 }
