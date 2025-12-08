@@ -63,4 +63,7 @@ public interface GNFService {
     void modificaResidenza(String cfAdmin, ResidenzaEntity residenza) throws Exception;
 
     NucleoFamiliareEntity creaNucleoFamiliare(String cfUtente, ResidenzaEntity residenza, boolean hasVeicolo, Integer numeroPostiVeicolo) throws Exception;
+
+    void aggiornaVeicolo(String cfAdmin, boolean hasVeicolo, Integer numeroPostiVeicolo) throws Exception;
+
 }

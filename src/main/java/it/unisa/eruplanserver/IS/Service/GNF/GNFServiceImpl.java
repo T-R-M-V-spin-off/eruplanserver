@@ -190,6 +190,35 @@ public class GNFServiceImpl implements GNFService {
         return nucleoSalvato;
     }
 
+    @Override
+    @Transactional
+    public void aggiornaVeicolo(String cfAdmin,boolean hasVeicolo, Integer numeroPostiVeicolo) throws Exception {
+        UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
+        if(admin == null){
+            throw new Exception("utente non trovato.");
+        }
+        NucleoFamiliareEntity nucleo=admin.getNucleoFamiliare();
+        if(nucleo==null){
+            throw new Exception("non hai un nucleo familiare.");
+        }
+        if(!nucleo.getAdmin().getId().equals(admin.getId())){
+            throw new Exception("Solo l'amministratore può modificare i dati del veicolo");
+        }
+        if(hasVeicolo){
+            if(numeroPostiVeicolo==null){
+                throw new Exception("Se hai un veicolo, devi specificare quanti posti hai.");
+            }
+            if(numeroPostiVeicolo>8){
+                throw new Exception("Il numero di posti deve essere tra 1 e 8.");
+            }
+        }else{
+            numeroPostiVeicolo = null;
+        }
+        nucleo.setHasVeicolo(hasVeicolo);
+        nucleo.setNumeroPostiVeicolo(numeroPostiVeicolo);
+        nucleoRepository.save(nucleo);
+    }
+
 
     // Implementazione requisito Visualizza Nucleo
     // Recupera l'utente dal CF, risale al nucleo, e restituisce la lista dei parenti.
