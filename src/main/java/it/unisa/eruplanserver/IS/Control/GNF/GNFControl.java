@@ -1,6 +1,9 @@
 package it.unisa.eruplanserver.IS.Control.GNF;
 
 import it.unisa.eruplanserver.IS.Entity.GNF.MembroEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.CreazioneNucleoRequest;
 import it.unisa.eruplanserver.IS.Entity.GNF.RichiestaAccessoEntity;
 import it.unisa.eruplanserver.IS.Service.GNF.GNFServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -145,6 +148,25 @@ public class GNFControl {
             return ResponseEntity.ok("Appoggio rimosso con successo.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    //RF-GNF.08: Creazione del nucleo familiare
+    @PostMapping("/crea")
+    public ResponseEntity<?> creaNucleoFamiliare(@RequestBody CreazioneNucleoRequest request, HttpServletRequest httpRequest) {
+        String cfUtente = (String) httpRequest.getSession().getAttribute("codiceFiscale");
+        if(cfUtente==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
+        }
+        try{
+            NucleoFamiliareEntity nucleoCreato=gnfService.creaNucleoFamiliare(
+                    cfUtente,
+                    request.getResidenza(),
+                    request.isHasVeicolo(),
+                    request.getNumeroPostiVeicolo()
+            );
+            return ResponseEntity.ok(nucleoCreato);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("errore. "+ e.getMessage());
         }
     }
 }

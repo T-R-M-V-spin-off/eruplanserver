@@ -15,11 +15,16 @@ import java.util.List;
 @Service
 public class GNFServiceImpl implements GNFService {
 
-    @Autowired private NucleoFamiliareRepository nucleoRepository;
-    @Autowired private RichiestaAccessoRepository richiestaRepository;
-    @Autowired private URRepository urRepository;
-    @Autowired private MembroRepository membroRepository;
-    @Autowired private AppoggioRepository appoggioRepository;
+    @Autowired
+    private NucleoFamiliareRepository nucleoRepository;
+    @Autowired
+    private RichiestaAccessoRepository richiestaRepository;
+    @Autowired
+    private URRepository urRepository;
+    @Autowired
+    private MembroRepository membroRepository;
+    @Autowired
+    private AppoggioRepository appoggioRepository;
 
     // RF-GNF.01: Invita una persona
     public void invitaUtente(String cfAdmin, String cfInvitato) throws Exception {
@@ -134,6 +139,56 @@ public class GNFServiceImpl implements GNFService {
         }
         return admin.getNucleoFamiliare().getAppoggi();
     }
+
+
+    @Override
+    public NucleoFamiliareEntity creaNucleoFamiliare(String cfUtente, ResidenzaEntity residenza, boolean hasVeicolo, Integer numeroPostiVeicolo) throws Exception {
+        UREntity utente = urRepository.findByCodiceFiscale(cfUtente);
+        if (utente == null) {
+            throw new Exception("Utente non trovato con questo codice fiscale.");
+        }
+        if (utente.getNucleoFamiliare() != null) {
+            throw new Exception("l'utente fa già parte di un nucleo familiare.");
+        }
+        if (residenza == null) {
+            throw new Exception("é obbligatorio inserire i dati della residenza.");
+        }
+        if (residenza.getViaPiazza() == null || residenza.getViaPiazza().trim().isEmpty()) {
+            throw new Exception("Il campo via/piazza è obbligatorio.");
+        }
+        if (residenza.getCivico() == null || residenza.getCivico().trim().isEmpty()) {
+            throw new Exception("il campo civico è obbligatorio.");
+        }
+        if (residenza.getComune() == null || residenza.getComune().trim().isEmpty()) {
+            throw new Exception("il campo comune è obbligatorio.");
+        }
+        if (residenza.getCap() == null || residenza.getCap().trim().isEmpty()) {
+            throw new Exception("il campo CAP è obbligatorio.");
+        }
+        if (hasVeicolo) {
+            if (numeroPostiVeicolo == null) {
+                throw new Exception("Specifica il numero di posti che hai nel tuo veicolo.");
+            }
+            if (numeroPostiVeicolo > 8) {
+                throw new Exception("Il numero di posti deve essere tra 1 e 8.");
+            }
+        } else {
+            numeroPostiVeicolo = null;
+        }
+        //creazione del nucleo familiare
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder()
+                .admin(utente)
+                .residenza(residenza)
+                .hasVeicolo(hasVeicolo)
+                .numeroPostiVeicolo(numeroPostiVeicolo)
+                .build();
+        NucleoFamiliareEntity nucleoSalvato = nucleoRepository.save(nucleo);
+
+        utente.setNucleoFamiliare(nucleoSalvato);
+        urRepository.save(utente);
+        return nucleoSalvato;
+    }
+
 
     // Implementazione requisito Visualizza Nucleo
     // Recupera l'utente dal CF, risale al nucleo, e restituisce la lista dei parenti.
