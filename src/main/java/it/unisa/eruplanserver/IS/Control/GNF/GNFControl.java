@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
 
 import java.util.List;
 
@@ -143,6 +144,20 @@ public class GNFControl {
         try {
             gnfService.rimuoviAppoggio(cfAdmin, id);
             return ResponseEntity.ok("Appoggio rimosso con successo.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // RF-GNF.23: Modifica residenza del nucleo
+    @PostMapping("/residenza/modifica")
+    public ResponseEntity<String> modificaResidenza(@RequestBody ResidenzaEntity residenza, HttpServletRequest request) {
+        String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
+        if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
+
+        try {
+            gnfService.modificaResidenza(cfAdmin, residenza);
+            return ResponseEntity.ok("Residenza aggiornata con successo.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
