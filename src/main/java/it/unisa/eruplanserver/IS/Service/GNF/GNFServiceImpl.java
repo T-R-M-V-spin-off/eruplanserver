@@ -261,22 +261,15 @@ public class GNFServiceImpl implements GNFService {
             throw new Exception("Dati residenza non validi.");
         }
 
-        // Se il nucleo ha già una residenza, aggiorna i campi; altrimenti crea una nuova
+        // Aggiornamento dei campi della residenza
         ResidenzaEntity current = nucleo.getResidenza();
-        if (current == null) {
-            // Salva la nuova residenza e collega al nucleo
-            ResidenzaEntity saved = residenzaRepository.save(residenza);
-            nucleo.setResidenza(saved);
-            nucleoRepository.save(nucleo);
-        } else {
-            // Aggiorna i campi della residenza esistente
-            current.setViaPiazza(residenza.getViaPiazza());
-            current.setCivico(residenza.getCivico());
-            current.setComune(residenza.getComune());
-            current.setCap(residenza.getCap());
-            current.setRegione(residenza.getRegione());
-            current.setPaese(residenza.getPaese());
-            residenzaRepository.save(current);
-        }
+        current.setViaPiazza(residenza.getViaPiazza());
+        current.setCivico(residenza.getCivico());
+        current.setComune(residenza.getComune());
+        current.setCap(residenza.getCap());
+        current.setRegione(residenza.getRegione());
+        current.setPaese(residenza.getPaese());
+        residenzaRepository.save(current);
+
     }
 }
