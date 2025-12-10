@@ -58,8 +58,11 @@ public class GNFServiceImplTest {
                 .paese("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") // 41 char
                 .build();
 
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
         UREntity admin = UREntity.builder()
                 .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
                 .build();
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
@@ -197,5 +200,60 @@ public class GNFServiceImplTest {
         verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
     }
 
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_19() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno45")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_20() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        when(appoggioRepository.save(any(AppoggioEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio);
+        verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
+    }
 
 }
