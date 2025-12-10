@@ -1,7 +1,7 @@
 package it.unisa.eruplanserver.IS.Utility;
 
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -90,5 +90,44 @@ public class Validator {
         if (paese == null || paese.length() < 4 || paese.length() > 40) return false;
 
         return true;
+    }
+
+    /**
+     * Valida il formato della data di nascita nel formato dd/MM/yyyy
+     *
+     * @param data La data in formato stringa
+     * @return true se il formato è valido, false altrimenti
+     */
+    public static boolean isDataNascitaFormatoValid(String data) {
+        if (data == null || data.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            formatter.parse(data);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Valida se il campo assistenza è definito (non null)
+     *
+     * @param assistenza Il valore boolean del campo assistenza
+     * @return true se il campo è stato impostato, false altrimenti
+     */
+    public static boolean isAssistenzaDefinita(Boolean assistenza) {
+        return assistenza != null;
+    }
+
+    /**
+     * Valida se il campo minorenne è definito (non null)
+     *
+     * @param minorenne Il valore boolean del campo minorenne
+     * @return true se il campo è stato impostato, false altrimenti
+     */
+    public static boolean isMinorenneDefinito(Boolean minorenne) {
+        return minorenne != null;
     }
 }

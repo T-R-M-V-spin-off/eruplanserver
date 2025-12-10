@@ -4,6 +4,7 @@ import it.unisa.eruplanserver.IS.Entity.GNF.*;
 import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import it.unisa.eruplanserver.IS.Repository.GNF.*;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
+import it.unisa.eruplanserver.IS.Exception.GNF.ValidationException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,26 @@ public class GNFServiceImpl implements GNFService {
 
     // RF-GNF.03: Aggiungi membro manuale
     public void aggiungiMembroManuale(String cfAdmin, MembroEntity membro) throws Exception {
+        // Validazione formato data di nascita (dd/MM/yyyy)
+        if (!Validator.isDataNascitaFormatoValid(membro.getDataDiNascita())) {
+            throw new ValidationException("Formato data non valido");
+        }
+
+        // Validazione sesso usando Validator
+        if (!Validator.isSessoValid(membro.getSesso())) {
+            throw new ValidationException("Sesso non valido");
+        }
+
+        // Validazione assistenza
+        if (!Validator.isAssistenzaDefinita(membro.getAssistenza())) {
+            throw new ValidationException("Campo Assistenza non definito");
+        }
+
+        // Validazione minorenne
+        if (!Validator.isMinorenneDefinito(membro.getMinorenne())) {
+            throw new ValidationException("Campo Minore di 14 non definito");
+        }
+
         UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
 
         if (admin.getNucleoFamiliare() == null) throw new Exception("Non hai ancora un nucleo.");
