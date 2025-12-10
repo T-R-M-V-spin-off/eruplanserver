@@ -29,6 +29,16 @@ public class Validator {
     private static final String CIVICO_REGEX = "^[0-9a-zA-Z/\\s]{1,6}$"; //
     private static final Pattern CAP_PATTERN = Pattern.compile(CAP_REGEX);
     private static final Pattern CIVICO_PATTERN = Pattern.compile(CIVICO_REGEX);
+    private static final String PAESE_REGEX = "^\\p{L}{4,40}$";
+    private static final Pattern PAESE_PATTERN = Pattern.compile(PAESE_REGEX);
+    private static final String PROVINCIA_REGEX = "^\\p{L}{4,20}$";
+    private static final Pattern PROVINCIA_PATTERN = Pattern.compile(PROVINCIA_REGEX);
+    private static final String REGIONE_REGEX = "^\\p{L}{5,25}$";
+    private static final Pattern REGIONE_PATTERN = Pattern.compile(REGIONE_REGEX);
+    private static final String COMUNE_REGEX = "^\\p{L}{2,40}$";
+    private static final Pattern COMUNE_PATTERN = Pattern.compile(COMUNE_REGEX);
+    private static final String VIA_REGEX = "^[a-zA-Z0-9\\s]{1,40}$";
+    private static final Pattern VIA_PATTERN = Pattern.compile(VIA_REGEX);
 
     /*
      * REGEX E PATTERN COMUNI
@@ -87,13 +97,13 @@ public class Validator {
     }
 
     public static boolean isIndirizzoValid(String via, String civico, String comune, String cap, String provincia, String regione, String paese) {
-        if (via == null || via.length() < 1 || via.length() > 40) return false;
+        if (via == null || !VIA_PATTERN.matcher(via).matches()) return false;
         if (civico == null || !CIVICO_PATTERN.matcher(civico).matches()) return false;
-        if (comune == null || comune.length() < 2 || comune.length() > 40) return false;
+        if (comune == null || !COMUNE_PATTERN.matcher(comune).matches()) return false;
         if (cap == null || !CAP_PATTERN.matcher(cap).matches()) return false;
-        if (provincia == null || provincia.length() < 4 || provincia.length() > 20) return false;
-        if (regione == null || regione.length() < 5 || regione.length() > 25) return false;
-        if (paese == null || paese.length() < 4 || paese.length() > 40) return false;
+        if (provincia == null || !PROVINCIA_PATTERN.matcher(provincia).matches()) return false;
+        if (regione == null || !REGIONE_PATTERN.matcher(regione).matches()) return false;
+        if (paese == null || !PAESE_PATTERN.matcher(paese).matches()) return false;
 
         return true;
     }

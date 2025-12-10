@@ -7,8 +7,6 @@ import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
 import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
-import it.unisa.eruplanserver.IS.Service.GNF.GNFServiceImpl;
-import it.unisa.eruplanserver.IS.Utility.Validator;
 import lombok.SneakyThrows;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -45,9 +43,7 @@ public class GNFServiceImplTest {
     @InjectMocks
     private GNFControl controller;
 
-    /* ===========================
-       Test originale (TC-M-9-18)
-       =========================== */
+
     @Test
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_18() {
@@ -200,4 +196,6 @@ public class GNFServiceImplTest {
 
         verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
     }
+
+
 }
