@@ -1,7 +1,13 @@
 package it.unisa.eruplanserver.IS.Utility;
 
+import it.unisa.eruplanserver.IS.Entity.GPE.Punto;
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -129,5 +135,34 @@ public class Validator {
      */
     public static boolean isMinorenneDefinito(Boolean minorenne) {
         return minorenne != null;
+    }
+
+    public void creaZoneSicure(List<ZonaSicura> zone) throws IllegalArgumentException {
+        if (zone == null || zone.isEmpty()) throw new IllegalArgumentException("Lista vuota");
+
+        for (ZonaSicura z : zone) {
+            if (z.getRaggio() < 50) {
+                throw new IllegalArgumentException("La creazione della zona sicura non viene effettuata dato che per il campo \"ListaZoneSicure\" per uno dei punti il raggio è troppo corto.");
+            }
+            if (z.getRaggio() > 250) {
+                throw new IllegalArgumentException("La creazione della zona sicura non viene effettuata dato che per il campo \"ListaZoneSicure\" per uno dei punti il raggio è troppo grande.");
+            }
+        }
+    }
+
+    public void creaZonaPericolo(List<Punto> punti) throws IllegalArgumentException {
+        if (punti.size() <= 3) {
+            throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che la lista dei punti della zona di pericolo troppo corta");
+        }
+        checkConnessione(punti);
+    }
+
+    public void checkConnessione(List<Punto> punti) throws IllegalArgumentException  {
+        Set<Punto> set = new HashSet<Punto>(punti);
+        if(!(set.size() < punti.size())){
+            throw new IllegalArgumentException("Il poligono non è chiuso");
+        }else if((punti.size() - set.size() != 1) && (punti.getFirst() != punti.getLast())){
+            throw new IllegalArgumentException("La forma del poligono non è valida");
+        }
     }
 }
