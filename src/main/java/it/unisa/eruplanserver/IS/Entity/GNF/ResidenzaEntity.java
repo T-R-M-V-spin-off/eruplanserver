@@ -20,6 +20,9 @@ public class ResidenzaEntity {
     private String viaPiazza;
 
     @Column(nullable = false)
+    private String provincia;
+
+    @Column(nullable = false)
     private String civico;
 
     @Column(nullable = false)
