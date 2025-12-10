@@ -155,7 +155,7 @@ public class GNFServiceImplTest {
        =========================== */
     @Test
     @SneakyThrows
-    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() throws Exception {
+    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() {
         // TC: LC = 16, CC valid, EDB = does not exist
         String cfAdmin = "CFADMINEXAMPLEAA";
         String cfInvitato = "GRT36T56GHH5334G"; // 16 chars valid pattern-wise
@@ -181,7 +181,7 @@ public class GNFServiceImplTest {
        =========================== */
     @Test
     @SneakyThrows
-    void whenCodiceFiscaleValidAndExists_thenReturnOk() throws Exception {
+    void whenCodiceFiscaleValidAndExists_thenReturnOk() {
         // TC: LC = 16, CC valid, EDB = exists
         String cfAdmin = "CFADMINEXAMPLEAA";
         String cfInvitato = "HTL34DEF7HFHJ77G"; // valid 16 chars
