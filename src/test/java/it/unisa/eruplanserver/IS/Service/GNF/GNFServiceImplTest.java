@@ -49,7 +49,8 @@ public class GNFServiceImplTest {
        Test originale (TC-M-9-18)
        =========================== */
     @Test
-    void testAggiuntaAppoggioTC_M_9_18() throws Exception {
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_18() {
 
         AppoggioEntity Appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Roma")
