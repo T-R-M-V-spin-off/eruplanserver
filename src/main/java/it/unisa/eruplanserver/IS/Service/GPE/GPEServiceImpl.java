@@ -1,6 +1,8 @@
 package it.unisa.eruplanserver.IS.Service.GPE;
 
 import it.unisa.eruplanserver.IS.Entity.GPE.PianoEvacuazioneEntity;
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaPericolo;
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
 import it.unisa.eruplanserver.IS.Exception.GPE.GPEException;
 import it.unisa.eruplanserver.IS.Repository.GPE.GPERepository;
 import it.unisa.eruplanserver.IS.Utility.Validator;
@@ -21,7 +23,7 @@ public class GPEServiceImpl implements GPEService {
 
     @Override
     @Transactional
-    public void generaPiano(String nome, String zonaPericolo, String zoneSicure) throws GPEException {
+    public void generaPiano(String nome, ZonaPericolo zonaPericolo, ZonaSicura zoneSicure) throws GPEException {
 
         if (!Validator.isNomePianoValid(nome)) {
             throw new GPEException("ERRORE - NOME PIANO NON VALIDO (Deve contenere solo lettere/numeri e avere 3-35 caratteri).");

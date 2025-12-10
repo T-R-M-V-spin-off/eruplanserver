@@ -1,5 +1,7 @@
 package it.unisa.eruplanserver.IS.Control.GPE;
 
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaPericolo;
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
 import it.unisa.eruplanserver.IS.Exception.GPE.GPEException;
 import it.unisa.eruplanserver.IS.Service.GPE.GPEService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,10 +44,10 @@ public class GPEControl {
             String nome = (String) json.get("nome");
 
             Object zonaPericoloObj = json.get("zonaPericolo");
-            String zonaPericolo = (zonaPericoloObj != null) ? zonaPericoloObj.toString() : null;
+            ZonaPericolo zonaPericolo = (zonaPericoloObj != null) ? (ZonaPericolo)zonaPericoloObj : null;
 
             Object zoneSicureObj = json.get("zoneSicure");
-            String zoneSicure = (zoneSicureObj != null) ? zoneSicureObj.toString() : null;
+            ZonaSicura zoneSicure = (zoneSicureObj != null) ? (ZonaSicura)zoneSicureObj : null;
             gpeService.generaPiano(nome, zonaPericolo, zoneSicure);
 
             response.setStatus(HttpServletResponse.SC_OK);
