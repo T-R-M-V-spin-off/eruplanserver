@@ -1,5 +1,6 @@
 package it.unisa.eruplanserver.IS.Service.GNF;
 
+
 import it.unisa.eruplanserver.IS.Control.GNF.GNFControl;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
@@ -7,6 +8,8 @@ import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
 import it.unisa.eruplanserver.IS.Service.GNF.GNFServiceImpl;
+import it.unisa.eruplanserver.IS.Utility.Validator;
+import lombok.SneakyThrows;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
@@ -34,16 +37,13 @@ public class GNFServiceImplTest {
     private AppoggioRepository appoggioRepository;
 
     @Mock
-    private GNFServiceImpl gnfServiceMock; 
-
-    @Mock
     private HttpServletRequest request;
 
     @Mock
     private HttpSession session;
 
     @InjectMocks
-    private GNFControl controller; 
+    private GNFControl controller;
 
     /* ===========================
        Test originale (TC-M-9-18)
@@ -68,14 +68,15 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
     }
 
     /* ===========================
        TC-M-10.5: eliminaAppoggio
        =========================== */
     @Test
-    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo() throws Exception {
+    @SneakyThrows
+    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo(){
         // TC-M-10.5: scenario positivo
         String cfAdmin = "CFADMIN";
         Long idAppoggio = 2222L;
@@ -108,6 +109,7 @@ public class GNFServiceImplTest {
        TC-M-01.1: InviteUserInvalidLengthTest
        =========================== */
     @Test
+    @SneakyThrows
     void whenCodiceFiscaleHasInvalidLength_thenBadRequestReturned() {
         // TC: LC != 16
         String cfAdmin = "CFADMINEXAMPLEAA";
@@ -123,13 +125,14 @@ public class GNFServiceImplTest {
                 response.getBody());
 
         // service must NOT be invoked
-        verifyNoInteractions(gnfServiceMock);
+        verifyNoInteractions(gnfService);
     }
 
     /* ===========================
        TC-M-01.2: InviteUserInvalidCharactersTest
        =========================== */
     @Test
+    @SneakyThrows
     void whenCodiceFiscaleContainsInvalidCharacters_thenBadRequestReturned() {
         // TC: LC = 16 but contains invalid characters
         String cfAdmin = "CFADMINEXAMPLEAA";
@@ -145,13 +148,14 @@ public class GNFServiceImplTest {
                 response.getBody());
 
         // service must NOT be invoked
-        verifyNoInteractions(gnfServiceMock);
+        verifyNoInteractions(gnfService);
     }
 
     /* ===========================
        TC-M-01.3: InviteUserNotFoundInDatabaseTest
        =========================== */
     @Test
+    @SneakyThrows
     void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() throws Exception {
         // TC: LC = 16, CC valid, EDB = does not exist
         String cfAdmin = "CFADMINEXAMPLEAA";
@@ -162,7 +166,7 @@ public class GNFServiceImplTest {
 
         // Simulate service throwing the "not found" exception with the TD-specific message
         String expectedServiceMessage = "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non ha nessuna corrispondenza con un utente sul DB.";
-        doThrow(new Exception(expectedServiceMessage)).when(gnfServiceMock).invitaUtente(cfAdmin, cfInvitato);
+        doThrow(new Exception(expectedServiceMessage)).when(gnfService).invitaUtente(cfAdmin, cfInvitato);
 
         ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
 
@@ -170,13 +174,14 @@ public class GNFServiceImplTest {
         assertEquals(expectedServiceMessage, response.getBody());
 
         // verify service invoked exactly once
-        verify(gnfServiceMock, times(1)).invitaUtente(cfAdmin, cfInvitato);
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
     }
 
     /* ===========================
        TC-M-01.4: InviteUserSuccessTest
        =========================== */
     @Test
+    @SneakyThrows
     void whenCodiceFiscaleValidAndExists_thenReturnOk() throws Exception {
         // TC: LC = 16, CC valid, EDB = exists
         String cfAdmin = "CFADMINEXAMPLEAA";
@@ -186,13 +191,13 @@ public class GNFServiceImplTest {
         when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
 
         // Service does not throw -> success path
-        doNothing().when(gnfServiceMock).invitaUtente(cfAdmin, cfInvitato);
+        doNothing().when(gnfService).invitaUtente(cfAdmin, cfInvitato);
 
         ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Invito inviato con successo.", response.getBody());
 
-        verify(gnfServiceMock, times(1)).invitaUtente(cfAdmin, cfInvitato);
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
     }
 }
