@@ -58,6 +58,14 @@ public class GNFControl {
         String cfAdmin = (String) request.getSession().getAttribute("codiceFiscale");
         if (cfAdmin == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login richiesto");
 
+        // VALIDAZIONE: lunghezza e caratteri del codice fiscale invitato
+        if (cfInvitato == null || cfInvitato.length() != 16) {
+            return ResponseEntity.badRequest().body("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non è composto da 16 caratteri.");
+        }
+        if (!cfInvitato.matches("^[A-Za-z1-9]{16}$")) {
+            return ResponseEntity.badRequest().body("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" contiene caratteri non validi.");
+        }
+
         try {
             gnfService.invitaUtente(cfAdmin, cfInvitato);
             return ResponseEntity.ok("Invito inviato con successo.");
@@ -201,9 +209,6 @@ public class GNFControl {
 
         }
     }
-
-
-
 
     // RF-GNF.23: Modifica residenza del nucleo
     @PostMapping("/residenza/modifica")
