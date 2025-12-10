@@ -52,6 +52,10 @@ public class Validator {
     private static final String COGNOME_PERSONA_REGEX="^[a-zA-Z\\s]{2,30}$";
     private static final Pattern COGNOME_PERSONA_PATTERN = Pattern.compile(COGNOME_PERSONA_REGEX);
 
+    // Nuovo pattern per TD-M-20: 16 caratteri, solo A-Za-z e cifre 1-9 (ZERO ESCLUSO)
+    private static final String CODICE_FISCALE_CHARS_REGEX = "^[A-Za-z1-9]{16}$";
+    private static final Pattern CODICE_FISCALE_CHARS_PATTERN = Pattern.compile(CODICE_FISCALE_CHARS_REGEX);
+
     /*
      * METODI DI VALIDAZIONE
      */
@@ -147,6 +151,7 @@ public class Validator {
         return minorenne != null;
     }
 
+
     public void creaZoneSicure(List<ZonaSicura> zone) throws IllegalArgumentException {
         if (zone == null || zone.isEmpty()) throw new IllegalArgumentException("Lista vuota");
 
@@ -161,18 +166,42 @@ public class Validator {
     }
 
     public void creaZonaPericolo(List<Punto> punti) throws IllegalArgumentException {
-        if (punti.size() <= 3) {
-            throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che la lista dei punti della zona di pericolo troppo corta");
+        if (punti == null || punti.size() <= 3) {
+            throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che il campo “ZonaPericolo” è composto da un numero di punti troppo basso.");
         }
         checkConnessione(punti);
     }
 
-    public void checkConnessione(List<Punto> punti) throws IllegalArgumentException  {
-        Set<Punto> set = new HashSet<Punto>(punti);
-        if(!(set.size() < punti.size())){
-            throw new IllegalArgumentException("Il poligono non è chiuso");
-        }else if((punti.size() - set.size() != 1) && (punti.getFirst() != punti.getLast())){
-            throw new IllegalArgumentException("La forma del poligono non è valida");
+    public void checkConnessione(List<Punto> punti) throws IllegalArgumentException {
+        Punto primo = punti.get(0);
+        Punto ultimo = punti.get(punti.size() - 1);
+
+        // Se il primo e l'ultimo punto NON coincidono, il poligono è aperto.
+        // Dobbiamo capire PERCHÉ è aperto per dare il messaggio giusto.
+        if (!primo.equals(ultimo)) {
+
+            Set<Punto> set = new HashSet<>(punti);
+
+            // Caso TC-W-17.3: Nessun punto è ripetuto (Set size == List size).
+            // Esempio: A -> B -> C -> D. Il primo punto "A" non è collegato a nessun altro (D).
+            if (set.size() == punti.size()) {
+                throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che nel campo “ZonaPericolo” il primo punto non è collegato a nessun altro.");
+            }
+
+            // Caso TC-W-17.2: Ci sono punti ripetuti, ma l'ultimo non è il primo.
+            // Esempio: A -> B -> C -> B. Il poligono si chiude su B, non su A.
+            else {
+                throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che nel campo “ZonaPericolo” l’ultimo punto della lista non è collegato al primo.");
+            }
         }
+    }
+
+    public static boolean isCodiceFiscaleLengthValid(String cf) {
+        return cf != null && cf.length() == 16;
+    }
+
+    public static boolean isCodiceFiscaleCharactersValid(String cf) {
+        if (cf == null) return false;
+        return CODICE_FISCALE_CHARS_PATTERN.matcher(cf).matches();
     }
 }

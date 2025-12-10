@@ -18,6 +18,10 @@ public class UREntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "nucleo_familiare_id")
+    private NucleoFamiliareEntity nucleoFamiliare;
+
     @Column(nullable = false, length = 30)
     private String nome;
 
@@ -36,7 +40,4 @@ public class UREntity {
     @Column(nullable = false, length = 1)
     private String sesso;
 
-    @ManyToOne
-    @JoinColumn(name = "nucleo_id")
-    private NucleoFamiliareEntity nucleoFamiliare;
 }

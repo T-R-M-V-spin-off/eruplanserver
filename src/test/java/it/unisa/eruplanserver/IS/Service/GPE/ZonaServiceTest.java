@@ -112,9 +112,53 @@ class ZoneServiceTest {
      * (Logica presente in Validator.creaZonaPericolo e Validator.checkConnessione)
      * =========================================================================== */
 
+
     @Test
-    @DisplayName("TC-W-17.2: Primo punto non collegato (Poligono Aperto)")
-    void testTC_W_17_6_PrimoPuntoDisconnesso() {
+    @DisplayName("TC-W-17.1: Numero di punti troppo basso (singolo punto)")
+    void testTC_W_17_1_PuntiInsufficienti() {
+        // INPUT: ZonaPericolo con un solo punto
+        // (40.872507, 14.328918)
+        List<Punto> input = Collections.singletonList(
+                new Punto(40.872507, 14.328918)
+        );
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            validator.creaZonaPericolo(input);
+        });
+
+        // OUTPUT ATTESO
+        assertEquals("La creazione della zona di pericolo non viene effettuata dato che il campo “ZonaPericolo” è composto da un numero di punti troppo basso.",
+                exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-W-17.2: Ultimo punto non collegato al primo (Poligono non chiuso su se stesso)")
+    void testTC_W_17_2_UltimoNonCollegatoAlPrimo() {
+        // INPUT:
+        // (40.872507, 14.328918) -> P1
+        // (40.871469, 14.398270) -> P2
+        // (40.830956, 14.392776) -> P3
+        // (40.871469, 14.398270) -> P2 (Ripetuto, ma non è P1!)
+
+        List<Punto> input = Arrays.asList(
+                new Punto(40.872507, 14.328918),
+                new Punto(40.871469, 14.398270),
+                new Punto(40.830956, 14.392776),
+                new Punto(40.871469, 14.398270)
+        );
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            validator.creaZonaPericolo(input);
+        });
+
+        // OUTPUT ATTESO
+        assertEquals("La creazione della zona di pericolo non viene effettuata dato che nel campo “ZonaPericolo” l’ultimo punto della lista non è collegato al primo.",
+                exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-W-17.3: Primo punto non collegato (Poligono Aperto)")
+    void testTC_W_17_3_PrimoPuntoDisconnesso() {
         // Input: Lista di 4 punti dove il primo (index 0) è DIVERSO dall'ultimo (index 3)
         // Questo viola la condizione (punti.getFirst() != punti.getLast()) in checkConnessione
         List<Punto> input = Arrays.asList(
@@ -130,7 +174,47 @@ class ZoneServiceTest {
         });
 
         // Verifichiamo il messaggio reale lanciato da Validator.checkConnessione
-        assertEquals("Il poligono non è chiuso", exception.getMessage());
+        assertEquals("La creazione della zona di pericolo non viene effettuata dato che nel campo “ZonaPericolo” il primo punto non è collegato a nessun altro.", exception.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("TC-W-17.4: Creazione della zona di pericolo con successo")
+    void testTC_W_17_4_Successo() {
+        // INPUT: ZonaPericolo con 4 punti validi e collegati
+        List<Punto> input = Arrays.asList(
+                new Punto(40.872507, 14.328918), // Punto A
+                new Punto(40.871469, 14.398270), // Punto B
+                new Punto(40.846022, 14.409943), // Punto C
+                new Punto(40.872507, 14.328918)  // Punto A (Chiusura del poligono)
+        );
+
+        assertDoesNotThrow(() -> validator.creaZonaPericolo(input));
+    }
+
+    @Test
+    @DisplayName("TC-W-17.5: Numero di punti troppo basso (due punti)")
+    void testTC_W_17_5_UltimoNonCollegatoAlPrimo() {
+        // INPUT
+        // (40.872507, 14.328918) primo punto
+        // (40.871469, 14.398270)
+        // (40.846022, 14.409943)
+        // (40.830956, 14.392776)
+        // (40.871469, 14.398270) diverso dal primo punto
+
+        List<Punto> input = Arrays.asList(
+                new Punto(40.872507, 14.328918),
+                new Punto(40.871469, 14.398270),
+                new Punto(40.846022, 14.409943),
+                new Punto(40.830956, 14.392776),
+                new Punto(40.871469, 14.398270)
+        );
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            validator.creaZonaPericolo(input);
+        });
+        // OUTPUT ATTESO
+        assertEquals("La creazione della zona di pericolo non viene effettuata dato che nel campo “ZonaPericolo” l’ultimo punto della lista non è collegato al primo.", exception.getMessage());
     }
 
     @Test
@@ -156,5 +240,7 @@ class ZoneServiceTest {
 
         assertEquals("La forma del poligono non è valida", exception.getMessage());
     }
+
 }
+
 
