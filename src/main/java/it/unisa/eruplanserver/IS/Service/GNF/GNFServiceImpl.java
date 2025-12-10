@@ -91,6 +91,7 @@ public class GNFServiceImpl implements GNFService {
             throw new ValidationException("Campo Minore di 14 non definito");
         }
 
+
         UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
 
         if (admin.getNucleoFamiliare() == null) throw new Exception("Non hai ancora un nucleo.");
@@ -173,10 +174,15 @@ public class GNFServiceImpl implements GNFService {
             throw new Exception("l'utente fa già parte di un nucleo familiare.");
         }
         if (residenza == null) {
-            throw new Exception("é obbligatorio inserire i dati della residenza.");
+            throw new ValidationException("é obbligatorio inserire i dati della residenza.");
         }
-        if (residenza.getViaPiazza() == null || residenza.getViaPiazza().trim().isEmpty()) {
-            throw new Exception("Il campo via/piazza è obbligatorio.");
+        String via = residenza.getViaPiazza();
+        if (via == null || via.trim().isEmpty()) {
+            // Return the specific validation message expected by tests
+            throw new ValidationException("Nome via/piazza troppo corto");
+        }
+        if (via.length() > 40) {
+            throw new ValidationException("Nome via/piazza troppo lungo");
         }
         if (residenza.getCivico() == null || residenza.getCivico().trim().isEmpty()) {
             throw new Exception("il campo civico è obbligatorio.");
