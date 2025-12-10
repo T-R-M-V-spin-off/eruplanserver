@@ -25,6 +25,13 @@ import static org.mockito.Mockito.*;
  * del metodo aggiungiMembroManuale() di GNFServiceImpl
  * 
  * Test Cases:
+ * - TC_M_03_1:  Lunghezza nome troppo corta
+ * - TC_M_03_2:  Lunghezza nome troppo elevata
+ * - TC_M_03_3:  Nome con caratteri non accettati
+ * - TC_M_03_4:  Lunghezza cognome troppo corta
+ * - TC_M_03_5:  Lunghezza cognome troppo elevata
+ * - TC_M_03_6:  Cognome con caratteri non accettati
+ * - TC_M_03_7:  Codice Fiscale non valido
  * - TC_M_03_8:  Validazione formato data di nascita (dd/MM/yyyy)
  * - TC_M_03_9:  Validazione sesso (M o F)
  * - TC_M_03_10: Validazione campo assistenza (non null)
@@ -45,10 +52,263 @@ class MembroServiceTest {
     @InjectMocks
     private GNFServiceImpl service;
 
+    // Costante per simulare il CF dell'admin in tutti i test
+    private final String CF_ADMIN = "CF123";
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         logger.info("========== INIZIO TEST SUITE RF-GNF.03 ==========");
+    }
+
+    /**
+     * TC_M_03_1: Lunghezza nome troppo corta
+     * * Scenario: Utente tenta di aggiungere membro con nome troppo corto
+     * Input: nome = "a" (lunghezza 1)
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Nome troppo corto")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_1: Lunghezza nome troppo corta")
+    void testNomeTroppoCorto_TC_M_03_1() {
+        logger.info(">>> Esecuzione TC_M_03_1: Validazione nome corto");
+
+        // --- ARRANGE ---
+        // Creazione dell'oggetto MembroEntity con dati validi, eccetto il Nome
+        MembroEntity input = MembroEntity.builder()
+                .nome("a")
+                .cognome("Capri")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+        logger.debug("Membro creato con nome corto: {}", input.getNome());
+
+        // --- ACT & ASSERT ---
+        // Tentiamo di eseguire il metodo. Ci aspettiamo che il validatore blocchi l'esecuzione
+        // lanciando una ValidationException prima di arrivare alla logica di business.
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        // --- VERIFY ---
+        // 1. Verifichiamo che il messaggio dell'eccezione sia esattamente quello atteso
+        assertEquals("Nome troppo corto", ex.getMessage());
+
+        // 2. Verifichiamo che il repository non sia MAI stato chiamato per salvare
+        verify(membroRepository, never()).save(any());
+
+        logger.info("<<< TC_M_03_1 COMPLETATO");
+    }
+
+    /**
+     * TC_M_03_2: Lunghezza nome troppo elevata
+     * * Scenario: Utente tenta di aggiungere membro con nome troppo lungo
+     * Input: nome = "A...a" (lunghezza 31)
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Nome troppo lungo")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_2: Lunghezza nome troppo elevata")
+    void testNomeTroppoLungo_TC_M_03_2() {
+        logger.info(">>> Esecuzione TC_M_03_2: Validazione nome lungo");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") // 31 chars
+                .cognome("Capri")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Nome troppo lungo", ex.getMessage());
+        verify(membroRepository, never()).save(any());
+    }
+
+    /**
+     * TC_M_03_3: Nome con caratteri non accettati
+     * * Scenario: Utente tenta di aggiungere membro con numeri nel nome
+     * Input: nome = "Sandro4"
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Nome non valido")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_3: Nome con caratteri invalidi")
+    void testNomeCaratteriInvalidi_TC_M_03_3() {
+        logger.info(">>> Esecuzione TC_M_03_3: Validazione caratteri nome");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Sandro4")
+                .cognome("Capri")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Nome non valido", ex.getMessage());
+        verify(membroRepository, never()).save(any());
+    }
+
+    /**
+     * TC_M_03_4: Lunghezza cognome troppo corta
+     * * Scenario: Utente tenta di aggiungere membro con cognome troppo corto
+     * Input: cognome = "C" (lunghezza 1)
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Cognome troppo corto")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_4: Lunghezza cognome troppo corta")
+    void testCognomeTroppoCorto_TC_M_03_4() {
+        logger.info(">>> Esecuzione TC_M_03_4: Validazione cognome corto");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Sandro")
+                .cognome("C")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Cognome troppo corto", ex.getMessage());
+        verify(membroRepository, never()).save(any());
+    }
+
+    /**
+     * TC_M_03_5: Lunghezza cognome troppo elevata
+     * * Scenario: Utente tenta di aggiungere membro con cognome troppo lungo
+     * Input: cognome = "bbbb..." (lunghezza 31)
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Cognome troppo lungo")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_5: Lunghezza cognome troppo elevata")
+    void testCognomeTroppoLungo_TC_M_03_5() {
+        logger.info(">>> Esecuzione TC_M_03_5: Validazione cognome lungo");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Sandro")
+                .cognome("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Cognome troppo lungo", ex.getMessage());
+        verify(membroRepository, never()).save(any());
+    }
+
+    /**
+     * TC_M_03_6: Cognome con caratteri non accettati
+     * * Scenario: Utente tenta di aggiungere membro con numeri nel cognome
+     * Input: cognome = "Capri3"
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Cognome non valido")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_6: Cognome con caratteri invalidi")
+    void testCognomeCaratteriInvalidi_TC_M_03_6() {
+        logger.info(">>> Esecuzione TC_M_03_6: Validazione caratteri cognome");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Sandro")
+                .cognome("Capri3")
+                .codiceFiscale("CDT02DGE34FE4rgh")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Cognome non valido", ex.getMessage());
+        verify(membroRepository, never()).save(any());
+    }
+
+    /**
+     * TC_M_03_7: Codice Fiscale non valido
+     * * Scenario: Utente tenta di aggiungere membro con CF corto e caratteri speciali
+     * Input: codiceFiscale = "CDT02DGE34$FE4"
+     * Expected: ValidationException con messaggio specifico
+     * Verifiche:
+     * - Eccezione lanciata
+     * - Messaggio d'errore corretto ("Codice Fiscale non valido")
+     * - Membro NON salvato in repository
+     */
+    @Test
+    @DisplayName("TC_M_03_7: Codice Fiscale invalido")
+    void testCodiceFiscaleErrato_TC_M_03_7() {
+        logger.info(">>> Esecuzione TC_M_03_7: Validazione Codice Fiscale");
+
+        MembroEntity input = MembroEntity.builder()
+                .nome("Sandro")
+                .cognome("Capri")
+                .codiceFiscale("CDT02DGE34$FE4")
+                .dataDiNascita("10/02/1974")
+                .sesso("M")
+                .assistenza(true)
+                .minorenne(false)
+                .build();
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> service.aggiungiMembroManuale(CF_ADMIN, input)
+        );
+
+        assertEquals("Codice Fiscale non valido", ex.getMessage());
+        verify(membroRepository, never()).save(any());
     }
 
     /**

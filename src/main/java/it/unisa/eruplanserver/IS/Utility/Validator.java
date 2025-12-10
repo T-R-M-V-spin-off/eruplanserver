@@ -204,4 +204,16 @@ public class Validator {
         if (cf == null) return false;
         return CODICE_FISCALE_CHARS_PATTERN.matcher(cf).matches();
     }
+
+    // ---------------------------------------------------------
+    //  NUOVI METODI HELPER PER I TEST CASE (Lunghezza Specifica)
+    // ---------------------------------------------------------
+
+    public static boolean isTroppoCorto(String input, int minLength) {
+        return input == null || input.length() < minLength;
+    }
+
+    public static boolean isTroppoLungo(String input, int maxLength) {
+        return input != null && input.length() > maxLength;
+    }
 }

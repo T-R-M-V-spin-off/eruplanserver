@@ -71,6 +71,40 @@ public class GNFServiceImpl implements GNFService {
 
     // RF-GNF.03: Aggiungi membro manuale
     public void aggiungiMembroManuale(String cfAdmin, MembroEntity membro) throws Exception {
+
+        // =================================================================
+        // VALIDAZIONE NOME (TC_M_03_1, TC_M_03_2, TC_M_03_3)
+        // =================================================================
+        // Prima controlliamo la lunghezza per dare i messaggi specifici richiesti dal test
+        if (Validator.isTroppoCorto(membro.getNome(), 2)) {
+            throw new ValidationException("Nome troppo corto");
+        }
+        if (Validator.isTroppoLungo(membro.getNome(), 30)) {
+            throw new ValidationException("Nome troppo lungo");
+        }
+        // Se la lunghezza è ok, usiamo la Regex originale per controllare SOLO i caratteri validi
+        if (!Validator.isNomeValid(membro.getNome())) {
+            throw new ValidationException("Nome non valido");
+        }
+
+        // =================================================================
+        // VALIDAZIONE COGNOME (TC_M_03_4, TC_M_03_5, TC_M_03_6)
+        // =================================================================
+        if (Validator.isTroppoCorto(membro.getCognome(), 2)) {
+            throw new ValidationException("Cognome troppo corto");
+        }
+        if (Validator.isTroppoLungo(membro.getCognome(), 30)) {
+            throw new ValidationException("Cognome troppo lungo");
+        }
+        if (!Validator.isCognomeValid(membro.getCognome())) {
+            throw new ValidationException("Cognome non valido");
+        }
+
+        // TC_M_03_7: Codice Fiscale
+        if (!Validator.isCodiceFiscaleValid(membro.getCodiceFiscale())) {
+            throw new ValidationException("Codice Fiscale non valido");
+        }
+
         // Validazione formato data di nascita (dd/MM/yyyy)
         if (!Validator.isDataNascitaFormatoValid(membro.getDataDiNascita())) {
             throw new ValidationException("Formato data non valido");
