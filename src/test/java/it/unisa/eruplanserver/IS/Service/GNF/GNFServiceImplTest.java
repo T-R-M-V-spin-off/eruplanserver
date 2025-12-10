@@ -49,13 +49,13 @@ public class GNFServiceImplTest {
     void testAggiuntaAppoggioTC_M_9_18() {
 
         AppoggioEntity Appoggio = AppoggioEntity.builder()
-                .viaPiazza("Via Roma")
-                .civico("10")
-                .cap("80100")
-                .comune("Napoli")
-                .provincia("NA")
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
                 .regione("Campania")
-                .paese("Italiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa") // >40 char
+                .paese("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") // 41 char
                 .build();
 
         UREntity admin = UREntity.builder()
