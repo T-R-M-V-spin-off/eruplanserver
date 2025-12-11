@@ -1,15 +1,20 @@
 package it.unisa.eruplanserver.IS.Service.GNF;
 
-
 import it.unisa.eruplanserver.IS.Control.GNF.GNFControl;
 import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
 import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.ResidenzaEntity;
 import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
+import it.unisa.eruplanserver.IS.Exception.GNF.ValidationException;
 import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
+import it.unisa.eruplanserver.IS.Repository.GNF.NucleoFamiliareRepository;
+import it.unisa.eruplanserver.IS.Repository.GNF.ResidenzaRepository;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
-import lombok.SneakyThrows;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,9 +29,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class GNFServiceImplTest {
+public class GNFServiceIntegratedTest {
+
     @InjectMocks
-    private GNFServiceImpl gnfService; 
+    private GNFServiceImpl gnfService;
+
+    @InjectMocks
+    private GNFControl controller;
 
     @Mock
     private URRepository urRepository;
@@ -35,20 +44,34 @@ public class GNFServiceImplTest {
     private AppoggioRepository appoggioRepository;
 
     @Mock
+    private NucleoFamiliareRepository nucleoRepository;
+
+    @Mock
+    private ResidenzaRepository residenzaRepository;
+
+    @Mock
     private HttpServletRequest request;
 
     @Mock
     private HttpSession session;
 
-    @InjectMocks
-    private GNFControl controller;
+    private UREntity mockUtente;
 
+    @BeforeEach
+    void setup() {
+        mockUtente = new UREntity();
+        mockUtente.setId(1L);
+        mockUtente.setCodiceFiscale("RSSMRA80A01H501U");
+        mockUtente.setNucleoFamiliare(null);
+    }
 
+    /* ===========================
+       Test AppoggioEntity
+       =========================== */
     @Test
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_18() {
-
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -67,144 +90,13 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
-    }
-
-    /* ===========================
-       TC-M-10.5: eliminaAppoggio
-       =========================== */
-    @Test
-    @SneakyThrows
-    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo(){
-        // TC-M-10.5: scenario positivo
-        String cfAdmin = "CFADMIN";
-        Long idAppoggio = 2222L;
-
-        // costruisco il nucleo con lo stesso id per admin e appoggio (condizione di sicurezza)
-        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
-
-        UREntity admin = UREntity.builder()
-                .codiceFiscale(cfAdmin)
-                .nucleoFamiliare(nucleo)
-                .build();
-
-        AppoggioEntity appoggio = AppoggioEntity.builder()
-                .id(idAppoggio)
-                .nucleoFamiliare(nucleo)
-                .build();
-
-        // mock dei repository come nel servizio reale
-        when(urRepository.findByCodiceFiscale(cfAdmin)).thenReturn(admin);
-        when(appoggioRepository.findById(idAppoggio)).thenReturn(Optional.of(appoggio));
-
-        // eseguo il metodo sotto test — non deve lanciare eccezione
-        gnfService.rimuoviAppoggio(cfAdmin, idAppoggio);
-
-        // verifico che l'entità sia stata eliminata (delete chiamato esattamente 1 volta)
-        verify(appoggioRepository, times(1)).delete(appoggio);
-    }
-
-    /* ===========================
-       TC-M-01.1: InviteUserInvalidLengthTest
-       =========================== */
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleHasInvalidLength_thenBadRequestReturned() {
-        // TC: LC != 16
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36TGHH53"; // length != 16
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non è composto da 16 caratteri.",
-                response.getBody());
-
-        // service must NOT be invoked
-        verifyNoInteractions(gnfService);
-    }
-
-    /* ===========================
-       TC-M-01.2: InviteUserInvalidCharactersTest
-       =========================== */
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleContainsInvalidCharacters_thenBadRequestReturned() {
-        // TC: LC = 16 but contains invalid characters
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36T$%GHH5334G"; // 16 chars but invalid chars
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" contiene caratteri non validi.",
-                response.getBody());
-
-        // service must NOT be invoked
-        verifyNoInteractions(gnfService);
-    }
-
-    /* ===========================
-       TC-M-01.3: InviteUserNotFoundInDatabaseTest
-       =========================== */
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() {
-        // TC: LC = 16, CC valid, EDB = does not exist
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36T56GHH5334G"; // 16 chars valid pattern-wise
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        // Simulate service throwing the "not found" exception with the TD-specific message
-        String expectedServiceMessage = "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non ha nessuna corrispondenza con un utente sul DB.";
-        doThrow(new Exception(expectedServiceMessage)).when(gnfService).invitaUtente(cfAdmin, cfInvitato);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(expectedServiceMessage, response.getBody());
-
-        // verify service invoked exactly once
-        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
-    }
-
-    /* ===========================
-       TC-M-01.4: InviteUserSuccessTest
-       =========================== */
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleValidAndExists_thenReturnOk() {
-        // TC: LC = 16, CC valid, EDB = exists
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "HTL34DEF7HFHJ77G"; // valid 16 chars
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        // Service does not throw -> success path
-        doNothing().when(gnfService).invitaUtente(cfAdmin, cfInvitato);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Invito inviato con successo.", response.getBody());
-
-        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     @Test
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_19() {
-
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -223,15 +115,13 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-
-        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     @Test
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_20() {
-
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -252,8 +142,236 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio);
+        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio);
         verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
     }
 
+    @Test
+    @SneakyThrows
+    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo() {
+        String cfAdmin = "CFADMIN";
+        Long idAppoggio = 2222L;
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale(cfAdmin)
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .id(idAppoggio)
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(cfAdmin)).thenReturn(admin);
+        when(appoggioRepository.findById(idAppoggio)).thenReturn(Optional.of(appoggio));
+
+        gnfService.rimuoviAppoggio(cfAdmin, idAppoggio);
+
+        verify(appoggioRepository, times(1)).delete(appoggio);
+    }
+
+    /* ===========================
+       Test ResidenzaEntity
+       =========================== */
+    @Test
+    void testPaeseTroppoCorto() {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Me") // troppo corto
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U"))
+                .thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare(
+                        "RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals(
+                "La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo corto.",
+                ex.getMessage()
+        );
+    }
+
+    @Test
+    void testPaeseTroppoLungo() {
+        String overlyLong = "e".repeat(50);
+
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese(overlyLong)
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U"))
+                .thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare(
+                        "RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals(
+                "La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo lungo.",
+                ex.getMessage()
+        );
+    }
+
+    @Test
+    void testPaeseCaratteriNonValidi() {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno45") // contiene numeri
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U"))
+                .thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare(
+                        "RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals(
+                "La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” contiene caratteri non validi.",
+                ex.getMessage()
+        );
+    }
+
+    @Test
+    void testPaeseValido() throws Exception {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U"))
+                .thenReturn(mockUtente);
+
+        when(residenzaRepository.save(any(ResidenzaEntity.class)))
+                .thenAnswer(i -> i.getArgument(0));
+
+        when(nucleoRepository.save(any(NucleoFamiliareEntity.class)))
+                .thenAnswer(i -> {
+                    NucleoFamiliareEntity nucleo = i.getArgument(0);
+                    nucleo.setId(10L);
+                    return nucleo;
+                });
+
+        NucleoFamiliareEntity created =
+                gnfService.creaNucleoFamiliare(
+                        "RSSMRA80A01H501U", res, false, null
+                );
+
+        assertNotNull(created);
+        assertEquals(10L, created.getId());
+        assertEquals("Messigno", created.getResidenza().getPaese());
+    }
+
+    /* ===========================
+       Test InvitaUtente nel controller
+       =========================== */
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleHasInvalidLength_thenBadRequestReturned() {
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36TGHH53"; // length != 16
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(
+                "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non è composto da 16 caratteri.",
+                response.getBody()
+        );
+
+        verifyNoInteractions(gnfService);
+    }
+
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleContainsInvalidCharacters_thenBadRequestReturned() {
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36T$%GHH5334G"; // 16 chars invalid
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(
+                "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" contiene caratteri non validi.",
+                response.getBody()
+        );
+
+        verifyNoInteractions(gnfService);
+    }
+
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() {
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36T56GHH5334G"; // 16 chars valid
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        String expectedServiceMessage = "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non ha nessuna corrispondenza con un utente sul DB.";
+        doThrow(new Exception(expectedServiceMessage)).when(gnfService).invitaUtente(cfAdmin, cfInvitato);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(expectedServiceMessage, response.getBody());
+
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
+    }
+
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleValidAndExists_thenReturnOk() {
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "HTL34DEF7HFHJ77G"; // valid 16 chars
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        doNothing().when(gnfService).invitaUtente(cfAdmin, cfInvitato);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Invito inviato con successo.", response.getBody());
+
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
+    }
 }
