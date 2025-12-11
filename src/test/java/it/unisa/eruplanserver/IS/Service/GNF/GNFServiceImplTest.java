@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -284,6 +285,220 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testEliminazioneAppoggioTC_M_10_4(){
         assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", 1L));
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST CASE SPECIFICATION: UC-M-09 (Aggiunta Appoggio)
+    // -------------------------------------------------------------------------
+
+    /*
+     * TC-M-09.4: Civico troppo corto
+     * Input: Civico = "" (vuoto)
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_04() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("") // Lunghezza non valida < 1 o civico assente
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.5: Civico troppo lungo
+     * Input: Civico = "67598069"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_05() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("67598069") // Lunghezza non valida > 6
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.6: Civico contiene caratteri non validi
+     * Input: Civico = "67-58"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_06() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("67-58") // Civico con caratteri non validi "-"
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.7: Comune troppo corto
+     * Input: Comune = "P"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_07() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("P") // Lunghezza non valida < 2
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.8: Comune troppo lungo
+     * Input: Comune = 41 caratteri '41 b'
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_08() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb") // lunghezza non valida > 40
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.9: Comune contiene caratteri non validi
+     * Input: Comune = "Pomp£i"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_09() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pomp£i") // Caratteri non validi
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+    }
+
+    /*
+     * TC-M-09.10: CAP formato non valido
+     * Input: CAP = "674" (non 5 cifre)
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_10() {
+
+        AppoggioEntity Appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("674") // Cifre non valide < 5
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
     }
 
 }
