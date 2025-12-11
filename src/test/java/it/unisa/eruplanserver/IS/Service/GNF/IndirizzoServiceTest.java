@@ -137,4 +137,165 @@ class IndirizzoServiceTest {
         logger.info("<<< TC_M_08_2 COMPLETATO: Validazione via lunga funziona correttamente");
     }
 
+// =================================================================================
+    //               TEST CAP (TC-M-08.10 - TC-M-08.13)
+    // =================================================================================
+
+    /**
+     * TC_M_08_10: Validazione CAP Troppo Corto
+     * Scenario: Utente inserisce CAP con meno di 5 cifre
+     * Input: cap = "8408"
+     * Expected: ValidationException
+     */
+    @Test
+    @DisplayName("TC_M_08_10: CAP troppo corto")
+    void testCapTroppoCorto_TC_M_08_10() {
+        logger.info(">>> Esecuzione TC_M_08_10: Validazione CAP corto");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli")
+                .cap("8408")
+                .provincia("Napoli").regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+        logger.debug("Eccezione catturata: {}", ex.getMessage());
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_10 COMPLETATO");
+    }
+
+    /**
+     * TC_M_08_11: Validazione CAP Troppo Lungo
+     * Scenario: Utente inserisce CAP con più di 5 cifre
+     * Input: cap = "840844"
+     * Expected: ValidationException
+     */
+    @Test
+    @DisplayName("TC_M_08_11: CAP troppo lungo")
+    void testCapTroppoLungo_TC_M_08_11() {
+        logger.info(">>> Esecuzione TC_M_08_11: Validazione CAP lungo");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli")
+                .cap("840844")
+                .provincia("Napoli").regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_11 COMPLETATO");
+    }
+
+    /**
+     * TC_M_08_12: Validazione CAP Formato Errato (Lettere)
+     * Scenario: Utente inserisce lettere nel CAP
+     * Input: cap = "8408A"
+     * Expected: ValidationException
+     */
+    @Test
+    @DisplayName("TC_M_08_12: CAP con lettere")
+    void testCapConLettere_TC_M_08_12() {
+        logger.info(">>> Esecuzione TC_M_08_12: Validazione CAP caratteri invalidi");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli")
+                .cap("8408A")
+                .provincia("Napoli").regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_12 COMPLETATO");
+    }
+
+    /**
+     * TC_M_08_13: Validazione CAP Formato Errato (Simboli)
+     * Scenario: Utente inserisce simboli nel CAP
+     * Input: cap = "8408@"
+     * Expected: ValidationException
+     */
+    @Test
+    @DisplayName("TC_M_08_13: CAP con simboli")
+    void testCapConSimboli_TC_M_08_13() {
+        logger.info(">>> Esecuzione TC_M_08_13: Validazione CAP simboli");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli")
+                .cap("8408@")
+                .provincia("Napoli").regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_13 COMPLETATO");
+    }
+
+    // =================================================================================
+    //               TEST  PROVINCIA (TC-M-08.14 - TC-M-08.16)
+    // =================================================================================
+
+    /**
+     * TC_M_08_14: Validazione Provincia Troppo Corta
+     * Input: provincia = "S"
+     */
+    @Test
+    @DisplayName("TC_M_08_14: Provincia troppo corta")
+    void testProvinciaTroppoCorta_TC_M_08_14() {
+        logger.info(">>> Esecuzione TC_M_08_14: Validazione Provincia corta");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli").cap("80100")
+                .provincia("S")
+                .regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_14 COMPLETATO");
+    }
+
+    /**
+     * TC_M_08_15: Validazione Provincia Troppo Lunga
+     * Input: provincia = > 20 caratteri
+     */
+    @Test
+    @DisplayName("TC_M_08_15: Provincia troppo lunga")
+    void testProvinciaTroppoLunga_TC_M_08_15() {
+        logger.info(">>> Esecuzione TC_M_08_15: Validazione Provincia lunga");
+        String provinciaLunga = "N".repeat(21);
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli").cap("80100")
+                .provincia(provinciaLunga)
+                .regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_15 COMPLETATO");
+    }
+
+    /**
+     * TC_M_08_16: Validazione Provincia Formato Errato (Numeri)
+     * Input: provincia = "Napoli1"
+     */
+    @Test
+    @DisplayName("TC_M_08_16: Provincia con numeri")
+    void testProvinciaConNumeri_TC_M_08_16() {
+        logger.info(">>> Esecuzione TC_M_08_16: Validazione Provincia numeri");
+        ResidenzaEntity input = ResidenzaEntity.builder()
+                .viaPiazza("Via Roma").civico("10").comune("Napoli").cap("80100")
+                .provincia("Napoli1")
+                .regione("Campania").paese("Italia")
+                .build();
+        Exception ex = assertThrows(Exception.class, () ->
+                service.creaNucleoFamiliare("CF123", input, false, 0)
+        );
+        verify(residenzaRepository, never()).save(any());
+        logger.info("<<< TC_M_08_16 COMPLETATO");
+    }
 }

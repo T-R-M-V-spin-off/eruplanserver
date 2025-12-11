@@ -267,6 +267,13 @@ public class GNFServiceImpl implements GNFService {
             numeroPostiVeicolo = null;
         }
 
+        //Validazione per l'indirizzo
+        if (!Validator.isIndirizzoValid(
+                residenza.getViaPiazza(), residenza.getCivico(), residenza.getComune(),
+                residenza.getCap(), residenza.getProvincia(), residenza.getRegione(), residenza.getPaese())) {
+            throw new ValidationException("Dati indirizzo non validi.");
+        }
+
         // Salviamo la residenza esplicitamente per evitare transient state issues
         ResidenzaEntity residenzaSalvata = residenzaRepository.save(residenza);
 
