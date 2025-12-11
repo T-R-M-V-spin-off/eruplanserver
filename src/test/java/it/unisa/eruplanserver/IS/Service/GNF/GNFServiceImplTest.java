@@ -9,31 +9,37 @@ import it.unisa.eruplanserver.IS.Exception.GNF.ValidationException;
 import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
 import it.unisa.eruplanserver.IS.Repository.GNF.NucleoFamiliareRepository;
 import it.unisa.eruplanserver.IS.Repository.GNF.ResidenzaRepository;
+import it.unisa.eruplanserver.IS.Repository.GNF.RichiestaAccessoRepository;
+import it.unisa.eruplanserver.IS.Repository.GNF.MembroRepository;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test integrato per GNFServiceImpl (unit tests).
+ * Contiene i test per AppoggioEntity, ResidenzaEntity e rimozione appoggio.
+ */
 @ExtendWith(MockitoExtension.class)
-public class GNFServiceIntegratedTest {
+public class GNFServiceImplTest {
 
     @InjectMocks
     private GNFServiceImpl gnfService;
 
+    // (opzionale) controller se vuoi testare call indirette in futuro
     @InjectMocks
     private GNFControl controller;
 
@@ -50,105 +56,200 @@ public class GNFServiceIntegratedTest {
     private ResidenzaRepository residenzaRepository;
 
     @Mock
+    private RichiestaAccessoRepository richiestaRepository;
+
+    @Mock
+    private MembroRepository membroRepository;
+
+    @Mock
     private HttpServletRequest request;
 
     @Mock
     private HttpSession session;
 
+    // Mocks utili nel setup generico
+    @Mock
+    private UREntity adminMock;
+
+    @Mock
+    private NucleoFamiliareEntity nucleoMock;
+
     private UREntity mockUtente;
+
+    private AppoggioEntity appoggioStandard;
+    private final String CF_ADMIN = "RSSMRA85T10A509Q";
 
     @BeforeEach
     void setup() {
+        // oggetto UREntity "reale" usato in alcuni test
         mockUtente = new UREntity();
         mockUtente.setId(1L);
         mockUtente.setCodiceFiscale("RSSMRA80A01H501U");
         mockUtente.setNucleoFamiliare(null);
-    }
 
-    /* ===========================
-       Test AppoggioEntity
-       =========================== */
-    @Test
-    @SneakyThrows
-    void testAggiuntaAppoggioTC_M_9_18() {
-        AppoggioEntity appoggio = AppoggioEntity.builder()
+        // lenient stubbing per i test che si affidano al setup base (evita fail se non usato)
+        lenient().when(urRepository.findByCodiceFiscale(CF_ADMIN)).thenReturn(adminMock);
+        lenient().when(adminMock.getNucleoFamiliare()).thenReturn(nucleoMock);
+
+        // appoggio standard valido
+        appoggioStandard = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
-                .cap("67489")
                 .comune("Pompei")
-                .provincia("Napoli")
-                .regione("Campania")
-                .paese("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") // 41 char
-                .build();
-
-        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
-
-        UREntity admin = UREntity.builder()
-                .codiceFiscale("RSSMRA85M01H501U")
-                .nucleoFamiliare(nucleo)
-                .build();
-
-        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
-
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
-    }
-
-    @Test
-    @SneakyThrows
-    void testAggiuntaAppoggioTC_M_9_19() {
-        AppoggioEntity appoggio = AppoggioEntity.builder()
-                .viaPiazza("Via Sarti")
-                .civico("675")
                 .cap("67489")
-                .comune("Pompei")
-                .provincia("Napoli")
-                .regione("Campania")
-                .paese("Messigno45")
-                .build();
-
-        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
-
-        UREntity admin = UREntity.builder()
-                .codiceFiscale("RSSMRA85M01H501U")
-                .nucleoFamiliare(nucleo)
-                .build();
-
-        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
-
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
-    }
-
-    @Test
-    @SneakyThrows
-    void testAggiuntaAppoggioTC_M_9_20() {
-        AppoggioEntity appoggio = AppoggioEntity.builder()
-                .viaPiazza("Via Sarti")
-                .civico("675")
-                .cap("67489")
-                .comune("Pompei")
                 .provincia("Napoli")
                 .regione("Campania")
                 .paese("Messigno")
                 .build();
+    }
 
-        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+    /* ===========================
+       Test AppoggioEntity (Validazione Provincia / Regione / Paese)
+       =========================== */
 
-        when(appoggioRepository.save(any(AppoggioEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+    @Test
+    @DisplayName("TC-M-09.11: Aggiunta Appoggio fallisce per Provincia troppo corta (<4)")
+    void testAggiungiAppoggio_ProvinciaTroppoCorta() {
+        // Arrange
+        appoggioStandard.setProvincia("Na"); // 2 caratteri
 
-        UREntity admin = UREntity.builder()
-                .codiceFiscale("RSSMRA85M01H501U")
-                .nucleoFamiliare(nucleo)
-                .build();
+        // Act & Assert
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
 
-        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
-
-        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio);
-        verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
+        assertTrue(exception.getMessage().toLowerCase().contains("provincia")
+                && exception.getMessage().toLowerCase().contains("troppo"),
+                "Messaggio atteso contenente riferimento a 'Provincia' e 'troppo', ottenuto: " + exception.getMessage());
     }
 
     @Test
-    @SneakyThrows
-    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo() {
+    @DisplayName("TC-M-09.12: Aggiunta Appoggio fallisce per Provincia troppo lunga (>20)")
+    void testAggiungiAppoggio_ProvinciaTroppoLunga() {
+        // Arrange
+        appoggioStandard.setProvincia("ccccccccccccccccccccc"); // 21 caratteri
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("provincia")
+                && exception.getMessage().toLowerCase().contains("troppo"),
+                "Messaggio atteso contenente riferimento a 'Provincia' e 'troppo', ottenuto: " + exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-M-09.13: Aggiunta Appoggio fallisce per Provincia con caratteri non validi")
+    void testAggiungiAppoggio_ProvinciaCaratteriInvalidi() {
+        // Arrange
+        appoggioStandard.setProvincia("Napoli23"); // Contiene numeri
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("provincia")
+                        && (exception.getMessage().toLowerCase().contains("caratter") ||
+                            exception.getMessage().toLowerCase().contains("non valid")),
+                "Messaggio atteso: riferimento a 'Provincia' e 'caratteri non validi', ottenuto: " + exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-M-09.14: Aggiunta Appoggio fallisce per Regione troppo corta (<5)")
+    void testAggiungiAppoggio_RegioneTroppoCorta() {
+        // Arrange
+        appoggioStandard.setRegione("Camp"); // 4 caratteri
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("regione")
+                && exception.getMessage().toLowerCase().contains("troppo"),
+                "Messaggio atteso contenente riferimento a 'Regione' e 'troppo', ottenuto: " + exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-M-09.15: Aggiunta Appoggio fallisce per Regione troppo lunga (>25)")
+    void testAggiungiAppoggio_RegioneTroppoLunga() {
+        // Arrange
+        appoggioStandard.setRegione("dddddddddddddddddddddddddd"); // 26 char
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("regione")
+                && exception.getMessage().toLowerCase().contains("troppo"),
+                "Messaggio atteso contenente riferimento a 'Regione' e 'troppo', ottenuto: " + exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-M-09.16: Aggiunta Appoggio fallisce per Regione con caratteri non validi")
+    void testAggiungiAppoggio_RegioneCaratteriInvalidi() {
+        // Arrange
+        appoggioStandard.setRegione("Campania2"); // contiene numeri
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("regione")
+                        && (exception.getMessage().toLowerCase().contains("caratter") ||
+                            exception.getMessage().toLowerCase().contains("non valid")),
+                "Messaggio atteso: riferimento a 'Regione' e 'caratteri non validi', ottenuto: " + exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC-M-09.17: Aggiunta Appoggio fallisce per Paese troppo corto (<4)")
+    void testAggiungiAppoggio_PaeseTroppoCorto() {
+        // Arrange
+        appoggioStandard.setPaese("Mes"); // 3 char
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+        });
+
+        assertTrue(exception.getMessage().toLowerCase().contains("paese")
+                && exception.getMessage().toLowerCase().contains("troppo"),
+                "Messaggio atteso contenente riferimento a 'Paese' e 'troppo', ottenuto: " + exception.getMessage());
+    }
+
+    /* ===========================
+       Test di successo per aggiungiAppoggio
+       =========================== */
+
+    @Test
+    @DisplayName("RF-GNF.09: Aggiunta Appoggio con successo")
+    void testAggiungiAppoggio_Successo() throws Exception {
+        // Arrange - appoggioStandard considerato valido dal validator
+        // Simula che admin abbia nucleo
+        when(adminMock.getNucleoFamiliare()).thenReturn(nucleoMock);
+        when(urRepository.findByCodiceFiscale(CF_ADMIN)).thenReturn(adminMock);
+
+        // Simula save che ritorna l'entità
+        when(appoggioRepository.save(any(AppoggioEntity.class))).thenAnswer(inv -> {
+            AppoggioEntity saved = inv.getArgument(0);
+            saved.setId(100L);
+            return saved;
+        });
+
+        // Act
+        gnfService.aggiungiAppoggio(CF_ADMIN, appoggioStandard);
+
+        // Assert
+        verify(appoggioRepository, times(1)).save(appoggioStandard);
+        // appoggioStandard dovrebbe avere il nucleo impostato
+        assertEquals(nucleoMock, appoggioStandard.getNucleoFamiliare());
+    }
+
+    /* ===========================
+       Test per rimozione appoggio (delete)
+       =========================== */
+
+    @Test
+    @DisplayName("Elimina Appoggio - success quando id esiste e admin appartiene al nucleo")
+    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo() throws Exception {
         String cfAdmin = "CFADMIN";
         Long idAppoggio = 2222L;
 
@@ -173,10 +274,12 @@ public class GNFServiceIntegratedTest {
     }
 
     /* ===========================
-       Test ResidenzaEntity
+       Test ResidenzaEntity (creaNucleoFamiliare validations)
        =========================== */
+
     @Test
-    void testViaPiazzaTroppoCorto() {
+    @DisplayName("creaNucleoFamiliare - viaPiazza troppo corto")
+    void testViaPiazzaTroppoCorto() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("")
                 .civico("675")
@@ -198,7 +301,8 @@ public class GNFServiceIntegratedTest {
     }
 
     @Test
-    void testViaPiazzaTroppoLungo() {
+    @DisplayName("creaNucleoFamiliare - viaPiazza troppo lungo")
+    void testViaPiazzaTroppoLungo() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("a".repeat(41))
                 .civico("675")
@@ -220,7 +324,8 @@ public class GNFServiceIntegratedTest {
     }
 
     @Test
-    void testViaPiazzaCaratteriNonValidi() {
+    @DisplayName("creaNucleoFamiliare - viaPiazza caratteri non validi")
+    void testViaPiazzaCaratteriNonValidi() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti%")
                 .civico("675")
@@ -242,10 +347,12 @@ public class GNFServiceIntegratedTest {
     }
 
     /* ===========================
-       Test Paese
+       Test Paese (creaNucleoFamiliare)
        =========================== */
+
     @Test
-    void testPaeseTroppoCorto() {
+    @DisplayName("creaNucleoFamiliare - Paese troppo corto")
+    void testPaeseTroppoCorto() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
@@ -272,7 +379,8 @@ public class GNFServiceIntegratedTest {
     }
 
     @Test
-    void testPaeseTroppoLungo() {
+    @DisplayName("creaNucleoFamiliare - Paese troppo lungo")
+    void testPaeseTroppoLungo() throws Exception {
         String overlyLong = "e".repeat(50);
 
         ResidenzaEntity res = ResidenzaEntity.builder()
@@ -301,7 +409,8 @@ public class GNFServiceIntegratedTest {
     }
 
     @Test
-    void testPaeseCaratteriNonValidi() {
+    @DisplayName("creaNucleoFamiliare - Paese contiene caratteri non validi")
+    void testPaeseCaratteriNonValidi() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
@@ -328,6 +437,7 @@ public class GNFServiceIntegratedTest {
     }
 
     @Test
+    @DisplayName("creaNucleoFamiliare - Paese valido (success)")
     void testPaeseValido() throws Exception {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
