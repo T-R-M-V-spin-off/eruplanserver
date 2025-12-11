@@ -49,7 +49,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_18() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -68,7 +68,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /* ===========================
@@ -205,7 +205,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_19() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -225,14 +225,14 @@ public class GNFServiceImplTest {
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
 
-        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     @Test
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_9_20() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -253,7 +253,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio);
+        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio);
         verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
     }
 
