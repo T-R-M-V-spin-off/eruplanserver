@@ -6,6 +6,7 @@ import it.unisa.eruplanserver.IS.Entity.GPE.ZonaPericolo;
 import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
 import it.unisa.eruplanserver.IS.Utility.Validator;
 import it.unisa.eruplanserver.IS.Repository.GPE.GPERepository;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -139,6 +140,17 @@ class ZonaServiceTest {
             validator.creaZoneSicure(input);
         });
         assertTrue(exception.getMessage().contains("raggio è troppo grande"));
+    }
+
+    @Test
+    @SneakyThrows
+    void testTC_W_18_4_CreazioneZonaSicura_Singola_Successo() {
+        List<ZonaSicura> input = Collections.singletonList(
+                new ZonaSicura(new Punto(40.872507, 14.328918), 50)
+        );
+
+        // Non dovrebbe lanciare eccezioni
+        validator.creaZoneSicure(input);
     }
 
     @Test
