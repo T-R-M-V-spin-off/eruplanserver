@@ -26,7 +26,7 @@ public class GNFServiceImpl implements GNFService {
     @Autowired
     private AppoggioRepository appoggioRepository;
     @Autowired
-    private ResidenzaRepository residenzaRepository; // nuovo repository per Residenza
+    private ResidenzaRepository residenzaRepository; // repository per Residenza
 
     // RF-GNF.01: Invita una persona
     public void invitaUtente(String cfAdmin, String cfInvitato) throws Exception {
@@ -210,14 +210,17 @@ public class GNFServiceImpl implements GNFService {
         if (residenza == null) {
             throw new ValidationException("é obbligatorio inserire i dati della residenza.");
         }
+
+        // Validazione via/piazza (manteniamo i messaggi già definiti)
         String via = residenza.getViaPiazza();
         if (via == null || via.trim().isEmpty()) {
-            // Return the specific validation message expected by tests
             throw new ValidationException("Nome via/piazza troppo corto");
         }
         if (via.length() > 40) {
             throw new ValidationException("Nome via/piazza troppo lungo");
         }
+
+        // Validazione civico / comune / cap di base (messaggi invariati)
         if (residenza.getCivico() == null || residenza.getCivico().trim().isEmpty()) {
             throw new Exception("il campo civico è obbligatorio.");
         }
@@ -227,6 +230,32 @@ public class GNFServiceImpl implements GNFService {
         if (residenza.getCap() == null || residenza.getCap().trim().isEmpty()) {
             throw new Exception("il campo CAP è obbligatorio.");
         }
+
+        // VALIDAZIONE SPECIFICA DEL CAMPO "Paese" (TC-M-08.17 / 08.18 / 08.19 / 08.20)
+        String paese = residenza.getPaese();
+        if (paese == null) {
+            // considerando campo null come troppo corto per rispondere al test frame
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo corto.");
+        }
+        paese = paese.trim();
+
+        // troppo corto
+        if (Validator.isTroppoCorto(paese, 4)) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo corto.");
+        }
+
+        // troppo lungo
+        if (Validator.isTroppoLungo(paese, 40)) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo lungo.");
+        }
+
+        // caratteri non validi: devono essere solo lettere (inclusi accenti/diacritici)
+        // dopo aver già controllato la lunghezza, qui verifichiamo i caratteri
+        if (!paese.matches("^\\p{L}+$")) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” contiene caratteri non validi.");
+        }
+
+        // Se il veicolo è indicato, controlli su numero posti
         if (hasVeicolo) {
             if (numeroPostiVeicolo == null) {
                 throw new Exception("Specifica il numero di posti che hai nel tuo veicolo.");
@@ -237,10 +266,14 @@ public class GNFServiceImpl implements GNFService {
         } else {
             numeroPostiVeicolo = null;
         }
-        //creazione del nucleo familiare
+
+        // Salviamo la residenza esplicitamente per evitare transient state issues
+        ResidenzaEntity residenzaSalvata = residenzaRepository.save(residenza);
+
+        // creazione del nucleo familiare
         NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder()
                 .admin(utente)
-                .residenza(residenza)
+                .residenza(residenzaSalvata)
                 .hasVeicolo(hasVeicolo)
                 .numeroPostiVeicolo(numeroPostiVeicolo)
                 .build();
