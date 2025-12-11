@@ -2,8 +2,9 @@ package it.unisa.eruplanserver.IS.Service.GPE;
 
 import it.unisa.eruplanserver.IS.Entity.GPE.Punto;
 import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
-import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicuraEntity;
+
 import it.unisa.eruplanserver.IS.Utility.Validator;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,7 @@ class ZoneServiceTest {
     @Spy
     private Validator validator;
 
-    @InjectMocks
-    private ZonaSicuraServiceImpl zonaSicuraService;
+
 
     @BeforeEach
     void setup() {
@@ -94,20 +94,21 @@ class ZoneServiceTest {
     }
 
     @Test
+    @SneakyThrows
     @DisplayName("TC-W-18.7: Raggio troppo piccolo in almeno una zona della lista")
     void testTC_W_18_7_RaggioTroppoPiccolo_Multipla() {
         // Lista con due zone sicure: una valida, una con raggio < 50
-        ZonaSicuraEntity validZona = new ZonaSicuraEntity(40.830956, 14.392776, 150);
-        ZonaSicuraEntity smallRaggioZona = new ZonaSicuraEntity(40.872507, 14.328918, 49);
+        ZonaSicura validZona = new ZonaSicura(new Punto(40.830956, 14.392776), 150);
+        ZonaSicura smallRaggioZona = new ZonaSicura(new Punto(40.872507, 14.328918), 49);
 
-        List<ZonaSicuraEntity> lista = Arrays.asList(validZona, smallRaggioZona);
+        List<ZonaSicura> lista = Arrays.asList(validZona, smallRaggioZona);
 
         Exception ex = assertThrows(Exception.class, () ->
-                zonaSicuraService.creaZonaSicura(lista)
+                validator.creaZoneSicure(lista)
         );
 
         assertEquals(
-                "La creazione della zona sicura non viene effettuata dato che per il campo “ListaZoneSicure” per uno dei punti il raggio è troppo corto.",
+                "La creazione della zona sicura non viene effettuata dato che per il campo \"ListaZoneSicure\" per uno dei punti il raggio è troppo corto.",
                 ex.getMessage()
         );
     }
