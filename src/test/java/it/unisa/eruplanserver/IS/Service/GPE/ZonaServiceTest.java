@@ -33,22 +33,30 @@ class ZoneServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    /* ===========================================================================
-       TEST CASE PER UC-W-18: Gestione Zone Sicure (Validator.creaZoneSicure)
-       =========================================================================== */
+    /* =======================================================================
+       UC-W-18: Gestione Zone Sicure
+       ======================================================================= */
 
     @Test
-    @DisplayName("TC-W-18.1: Lista zone sicure vuota o nulla")
-    void testListaZoneVuota() {
+    @DisplayName("TC-W-18.1: Lista zone sicure nulla o senza coordinate")
+    void testTC_W_18_1_ListaZoneSicureNulla() {
+        // Lista nulla
         Exception exceptionNull = assertThrows(IllegalArgumentException.class, () -> {
             validator.creaZoneSicure(null);
         });
-        assertEquals("Lista vuota", exceptionNull.getMessage());
+        assertEquals(
+                "La creazione della zona sicura non viene effettuata dato che per il campo “ListaZoneSicure” non è stata definita nessuna coordinata.",
+                exceptionNull.getMessage()
+        );
 
+        // Lista vuota
         Exception exceptionEmpty = assertThrows(IllegalArgumentException.class, () -> {
             validator.creaZoneSicure(Collections.emptyList());
         });
-        assertEquals("Lista vuota", exceptionEmpty.getMessage());
+        assertEquals(
+                "La creazione della zona sicura non viene effettuata dato che per il campo “ListaZoneSicure” non è stata definita nessuna coordinata.",
+                exceptionEmpty.getMessage()
+        );
     }
 
     @Test
@@ -123,7 +131,7 @@ class ZoneServiceTest {
     }
 
     @Test
-    @DisplayName("TC-W-18.9 - 18.11: Successo con raggi validi (Minimo, Massimo, Intermedio)")
+    @DisplayName("TC-W-18.9 - 18.11: Successo con raggi validi")
     void testSuccessoRaggiValidi() {
         // Caso raggio minimo (50)
         List<ZonaSicura> inputMin = Arrays.asList(
@@ -140,9 +148,9 @@ class ZoneServiceTest {
         assertDoesNotThrow(() -> validator.creaZoneSicure(inputMax));
     }
 
-    /* ===========================================================================
-       TEST CASE PER UC-W-17: Zona Pericolo (Validator.creaZonaPericolo)
-       =========================================================================== */
+    /* =======================================================================
+       UC-W-17: Zona Pericolo
+       ======================================================================= */
 
     @Test
     @DisplayName("TC-W-17.1: Numero di punti troppo basso (singolo punto)")
@@ -160,7 +168,7 @@ class ZoneServiceTest {
     }
 
     @Test
-    @DisplayName("TC-W-17.2: Ultimo punto non collegato al primo (Poligono non chiuso su se stesso)")
+    @DisplayName("TC-W-17.2: Ultimo punto non collegato al primo")
     void testTC_W_17_2_UltimoNonCollegatoAlPrimo() {
         List<Punto> input = Arrays.asList(
                 new Punto(40.872507, 14.328918),
@@ -180,7 +188,7 @@ class ZoneServiceTest {
     }
 
     @Test
-    @DisplayName("TC-W-17.3: Primo punto non collegato (Poligono Aperto)")
+    @DisplayName("TC-W-17.3: Primo punto non collegato")
     void testTC_W_17_3_PrimoPuntoDisconnesso() {
         List<Punto> input = Arrays.asList(
                 new Punto(40.872507, 14.328918),
@@ -213,7 +221,7 @@ class ZoneServiceTest {
     }
 
     @Test
-    @DisplayName("TC-W-17.5: Ultimo punto non collegato al primo (due punti duplicati errati)")
+    @DisplayName("TC-W-17.5: Ultimo punto non collegato al primo (duplicati errati)")
     void testTC_W_17_5_UltimoNonCollegatoAlPrimo() {
         List<Punto> input = Arrays.asList(
                 new Punto(40.872507, 14.328918),
@@ -234,7 +242,7 @@ class ZoneServiceTest {
     }
 
     @Test
-    @DisplayName("TC-W-17.6: Poligono non chiuso (Punti duplicati errati)")
+    @DisplayName("TC-W-17.6: Poligono non chiuso (duplicati errati)")
     void testPoligonoConDuplicati() {
         Punto p1 = new Punto(40.872507, 14.328918);
         Punto p2 = new Punto(40.830956, 14.392776);
