@@ -299,7 +299,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_04() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("") // Lunghezza non valida < 1 o civico assente
                 .cap("67489")
@@ -318,7 +318,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -329,7 +329,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_05() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("67598069") // Lunghezza non valida > 6
                 .cap("67489")
@@ -348,7 +348,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -359,7 +359,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_06() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("67-58") // Civico con caratteri non validi "-"
                 .cap("67489")
@@ -378,7 +378,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -389,7 +389,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_07() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -408,7 +408,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -419,7 +419,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_08() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -438,7 +438,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -449,7 +449,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_09() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("67489")
@@ -468,7 +468,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
     /*
@@ -479,7 +479,7 @@ public class GNFServiceImplTest {
     @SneakyThrows
     void testAggiuntaAppoggioTC_M_09_10() {
 
-        AppoggioEntity Appoggio = AppoggioEntity.builder()
+        AppoggioEntity appoggio = AppoggioEntity.builder()
                 .viaPiazza("Via Sarti")
                 .civico("675")
                 .cap("674") // Cifre non valide < 5
@@ -498,7 +498,7 @@ public class GNFServiceImplTest {
 
         when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
 
-        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), Appoggio));
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
     }
 
 }
