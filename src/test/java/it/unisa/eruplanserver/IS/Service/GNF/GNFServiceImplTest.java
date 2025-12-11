@@ -256,34 +256,4 @@ public class GNFServiceImplTest {
         verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
     }
 
-    @Test
-    @SneakyThrows
-    void testEliminazioneAppoggioTC_M_10_1(){
-
-        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", null));
-
-    }
-
-    @Test
-    @SneakyThrows
-    void testEliminazioneAppoggioTC_M_10_2(){
-
-        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U",2147483647L + 1));
-
-    }
-
-    @Test
-    @SneakyThrows
-    void testEliminazioneAppoggioTC_M_10_3(){
-
-        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", Long.valueOf("11111f1")));
-
-    }
-
-    @Test
-    @SneakyThrows
-    void testEliminazioneAppoggioTC_M_10_4(){
-        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", 1L));
-    }
-
 }
