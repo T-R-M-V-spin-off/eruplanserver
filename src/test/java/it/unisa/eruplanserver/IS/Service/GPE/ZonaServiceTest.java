@@ -20,6 +20,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -140,6 +142,18 @@ class ZonaServiceTest {
 
         // Non dovrebbe lanciare eccezioni
         validator.creaZoneSicure(input);
+    }
+
+    @Test
+    @DisplayName("TC-W-18.6: Creazione Zona Sicura con raggio valido intermedio (150)")
+    void testTC_W_18_6_Successo() {
+        // Input specifico del TC-W-18.6 
+        List<ZonaSicura> input = Collections.singletonList(
+                new ZonaSicura(new Punto(40.872507, 14.328918), 150)
+        );
+
+        // Deve passare senza eccezioni (Esito: [OK])
+        assertDoesNotThrow(() -> validator.creaZoneSicure(input));
     }
 
     @Test

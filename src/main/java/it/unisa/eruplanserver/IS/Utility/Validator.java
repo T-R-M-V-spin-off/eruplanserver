@@ -152,7 +152,7 @@ public class Validator {
     }
 
 
-    public void creaZoneSicure(List<ZonaSicura> zone) throws IllegalArgumentException {
+    public static void creaZoneSicure(List<ZonaSicura> zone) throws IllegalArgumentException {
         if (zone == null || zone.isEmpty()) throw new IllegalArgumentException("Lista vuota");
 
         for (ZonaSicura z : zone) {
@@ -165,14 +165,14 @@ public class Validator {
         }
     }
 
-    public void creaZonaPericolo(List<Punto> punti) throws IllegalArgumentException {
+    public static void creaZonaPericolo(List<Punto> punti) throws IllegalArgumentException {
         if (punti == null || punti.size() <= 3) {
             throw new IllegalArgumentException("La creazione della zona di pericolo non viene effettuata dato che il campo “ZonaPericolo” è composto da un numero di punti troppo basso.");
         }
         checkConnessione(punti);
     }
 
-    public void checkConnessione(List<Punto> punti) throws IllegalArgumentException {
+    public static void checkConnessione(List<Punto> punti) throws IllegalArgumentException {
         Punto primo = punti.get(0);
         Punto ultimo = punti.get(punti.size() - 1);
 
