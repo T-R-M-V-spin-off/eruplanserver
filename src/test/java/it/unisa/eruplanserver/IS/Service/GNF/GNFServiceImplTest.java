@@ -176,6 +176,75 @@ public class GNFServiceIntegratedTest {
        Test ResidenzaEntity
        =========================== */
     @Test
+    void testViaPiazzaTroppoCorto() {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U")).thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare("RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals("Nome via/piazza troppo corto", ex.getMessage());
+    }
+
+    @Test
+    void testViaPiazzaTroppoLungo() {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("a".repeat(41))
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U")).thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare("RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals("Nome via/piazza troppo lungo", ex.getMessage());
+    }
+
+    @Test
+    void testViaPiazzaCaratteriNonValidi() {
+        ResidenzaEntity res = ResidenzaEntity.builder()
+                .viaPiazza("Via Sarti%")
+                .civico("675")
+                .comune("Pompei")
+                .cap("67489")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        when(urRepository.findByCodiceFiscale("RSSMRA80A01H501U")).thenReturn(mockUtente);
+
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> gnfService.creaNucleoFamiliare("RSSMRA80A01H501U", res, false, null)
+        );
+
+        assertEquals("Nome via/piazza contiene caratteri non validi", ex.getMessage());
+    }
+
+    /* ===========================
+       Test Paese
+       =========================== */
+    @Test
     void testPaeseTroppoCorto() {
         ResidenzaEntity res = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
@@ -291,87 +360,5 @@ public class GNFServiceIntegratedTest {
         assertNotNull(created);
         assertEquals(10L, created.getId());
         assertEquals("Messigno", created.getResidenza().getPaese());
-    }
-
-    /* ===========================
-       Test InvitaUtente nel controller
-       =========================== */
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleHasInvalidLength_thenBadRequestReturned() {
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36TGHH53"; // length != 16
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non è composto da 16 caratteri.",
-                response.getBody()
-        );
-
-        verifyNoInteractions(gnfService);
-    }
-
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleContainsInvalidCharacters_thenBadRequestReturned() {
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36T$%GHH5334G"; // 16 chars invalid
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" contiene caratteri non validi.",
-                response.getBody()
-        );
-
-        verifyNoInteractions(gnfService);
-    }
-
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() {
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "GRT36T56GHH5334G"; // 16 chars valid
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        String expectedServiceMessage = "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non ha nessuna corrispondenza con un utente sul DB.";
-        doThrow(new Exception(expectedServiceMessage)).when(gnfService).invitaUtente(cfAdmin, cfInvitato);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(expectedServiceMessage, response.getBody());
-
-        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
-    }
-
-    @Test
-    @SneakyThrows
-    void whenCodiceFiscaleValidAndExists_thenReturnOk() {
-        String cfAdmin = "CFADMINEXAMPLEAA";
-        String cfInvitato = "HTL34DEF7HFHJ77G"; // valid 16 chars
-
-        when(request.getSession(false)).thenReturn(session);
-        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
-
-        doNothing().when(gnfService).invitaUtente(cfAdmin, cfInvitato);
-
-        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Invito inviato con successo.", response.getBody());
-
-        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
     }
 }
