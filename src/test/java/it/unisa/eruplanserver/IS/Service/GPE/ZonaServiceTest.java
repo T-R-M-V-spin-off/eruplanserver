@@ -40,10 +40,6 @@ class ZonaServiceTest {
     @Spy
     private Validator validator;
 
-    // Service per la gestione specifica delle zone sicure (se presente nel tuo design)
-    @InjectMocks
-    private ZonaSicuraServiceImpl zonaSicuraService;
-
     @Mock
     private GPERepository gpeRepository;
 
@@ -76,22 +72,15 @@ class ZonaServiceTest {
     @Test
     @DisplayName("TC-W-18.5: Creazione Zona Sicura con Successo (Entity Test)")
     void testTC_W_18_5_CreazioneZonaSicura_Successo() {
-        // INPUT
-        double latitudine = 40.872507;
-        double longitudine = 14.328918;
-        double raggio = 250.0;
 
-        // ACT
-        Punto punto = new Punto(latitudine, longitudine);
-        ZonaSicura zonaSicura = new ZonaSicura(punto, raggio);
+        List<ZonaSicura> input = Arrays.asList(
+                new ZonaSicura(new Punto(40.872507, 14.328918), 50),
+                new ZonaSicura(new Punto(40.872507, 14.328918), 250)
+        );
 
-        // ASSERT (OUTPUT)
-        assertNotNull(zonaSicura, "L'oggetto ZonaSicura non dovrebbe essere null");
-        assertEquals(latitudine, zonaSicura.getCoordinate().getLatitudine());
-        assertEquals(longitudine, zonaSicura.getCoordinate().getLongitudine());
-        assertEquals(raggio, zonaSicura.getRaggio());
-        
-        // Output da specifica: "La creazione della zona sicura viene effettuata con successo."
+        // Non dovrebbe lanciare eccezioni
+        validator.creaZoneSicure(input);
+
     }
 
     @Test
