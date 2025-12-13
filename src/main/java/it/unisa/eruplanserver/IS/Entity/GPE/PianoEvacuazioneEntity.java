@@ -1,5 +1,7 @@
 package it.unisa.eruplanserver.IS.Entity.GPE;
 
+import it.unisa.eruplanserver.IS.Utility.ZonaPericoloConverter;
+import it.unisa.eruplanserver.IS.Utility.ZonaSicuraConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -23,11 +25,13 @@ public class PianoEvacuazioneEntity {
     @Column(nullable = false)
     private LocalDateTime dataCreazione;
 
-    @Column(columnDefinition = "TEXT") // O tipo spaziale
-    private String zonaPericolo;
+    @Column(columnDefinition = "TEXT")
+    @Convert(converter = ZonaPericoloConverter.class) // Usa quello specifico per ZonaPericolo
+    private ZonaPericolo zonaPericolo;
 
     @Column(columnDefinition = "TEXT")
-    private String zoneSicure;
+    @Convert(converter = ZonaSicuraConverter.class)   // Usa questo NUOVO converter
+    private ZonaSicura zoneSicure;
 
     @Column(nullable = false)
     private String stato;

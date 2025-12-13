@@ -38,11 +38,13 @@ public class MembroEntity {
 
     // Lato Mobile (riga 138): m.setAssistenza(obj.optBoolean("assistenza"));
     // Deve chiamarsi "assistenza", non "richiedeAssistenza".
-    private boolean assistenza;
+    // Cambiato a Boolean (oggetto) per permettere null e validazione
+    private Boolean assistenza;
 
     // Lato Mobile (riga 139): m.setMinorenne(obj.optBoolean("minorenne"));
     // Deve chiamarsi "minorenne", non "isMinorenne".
-    private boolean minorenne;
+    // Cambiato a Boolean (oggetto) per permettere null e validazione
+    private Boolean minorenne;
 
     @ManyToOne
     @JoinColumn(name = "nucleo_id", nullable = false)

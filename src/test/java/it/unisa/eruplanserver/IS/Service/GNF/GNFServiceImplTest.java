@@ -1,0 +1,504 @@
+package it.unisa.eruplanserver.IS.Service.GNF;
+
+
+import it.unisa.eruplanserver.IS.Control.GNF.GNFControl;
+import it.unisa.eruplanserver.IS.Entity.GNF.AppoggioEntity;
+import it.unisa.eruplanserver.IS.Entity.GNF.NucleoFamiliareEntity;
+import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
+import it.unisa.eruplanserver.IS.Repository.GNF.AppoggioRepository;
+import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
+import lombok.SneakyThrows;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class GNFServiceImplTest {
+    @InjectMocks
+    private GNFServiceImpl gnfService; 
+
+    @Mock
+    private URRepository urRepository;
+
+    @Mock
+    private AppoggioRepository appoggioRepository;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private HttpSession session;
+
+    @InjectMocks
+    private GNFControl controller;
+
+
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_18() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") // 41 char
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /* ===========================
+       TC-M-10.5: eliminaAppoggio
+       =========================== */
+    @Test
+    @SneakyThrows
+    void eliminaAppoggio_success_quando_id_esiste_e_admin_appartiene_al_nucleo(){
+        // TC-M-10.5: scenario positivo
+        String cfAdmin = "CFADMIN";
+        Long idAppoggio = 2222L;
+
+        // costruisco il nucleo con lo stesso id per admin e appoggio (condizione di sicurezza)
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale(cfAdmin)
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .id(idAppoggio)
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        // mock dei repository come nel servizio reale
+        when(urRepository.findByCodiceFiscale(cfAdmin)).thenReturn(admin);
+        when(appoggioRepository.findById(idAppoggio)).thenReturn(Optional.of(appoggio));
+
+        // eseguo il metodo sotto test — non deve lanciare eccezione
+        gnfService.rimuoviAppoggio(cfAdmin, idAppoggio);
+
+        // verifico che l'entità sia stata eliminata (delete chiamato esattamente 1 volta)
+        verify(appoggioRepository, times(1)).delete(appoggio);
+    }
+
+    /* ===========================
+       TC-M-01.1: InviteUserInvalidLengthTest
+       =========================== */
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleHasInvalidLength_thenBadRequestReturned() {
+        // TC: LC != 16
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36TGHH53"; // length != 16
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non è composto da 16 caratteri.",
+                response.getBody());
+
+        // service must NOT be invoked
+        verifyNoInteractions(gnfService);
+    }
+
+    /* ===========================
+       TC-M-01.2: InviteUserInvalidCharactersTest
+       =========================== */
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleContainsInvalidCharacters_thenBadRequestReturned() {
+        // TC: LC = 16 but contains invalid characters
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36T$%GHH5334G"; // 16 chars but invalid chars
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" contiene caratteri non validi.",
+                response.getBody());
+
+        // service must NOT be invoked
+        verifyNoInteractions(gnfService);
+    }
+
+    /* ===========================
+       TC-M-01.3: InviteUserNotFoundInDatabaseTest
+       =========================== */
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleValidButNotInDb_thenBadRequestWithServiceMessage() {
+        // TC: LC = 16, CC valid, EDB = does not exist
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "GRT36T56GHH5334G"; // 16 chars valid pattern-wise
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        // Simulate service throwing the "not found" exception with the TD-specific message
+        String expectedServiceMessage = "L'invito di un utente nel proprio nucleo familiare non viene effettuato dato che il campo \"CodiceFiscale\" non ha nessuna corrispondenza con un utente sul DB.";
+        doThrow(new Exception(expectedServiceMessage)).when(gnfService).invitaUtente(cfAdmin, cfInvitato);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(expectedServiceMessage, response.getBody());
+
+        // verify service invoked exactly once
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
+    }
+
+    /* ===========================
+       TC-M-01.4: InviteUserSuccessTest
+       =========================== */
+    @Test
+    @SneakyThrows
+    void whenCodiceFiscaleValidAndExists_thenReturnOk() {
+        // TC: LC = 16, CC valid, EDB = exists
+        String cfAdmin = "CFADMINEXAMPLEAA";
+        String cfInvitato = "HTL34DEF7HFHJ77G"; // valid 16 chars
+
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute("codiceFiscale")).thenReturn(cfAdmin);
+
+        // Service does not throw -> success path
+        doNothing().when(gnfService).invitaUtente(cfAdmin, cfInvitato);
+
+        ResponseEntity<String> response = controller.invitaUtente(cfInvitato, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Invito inviato con successo.", response.getBody());
+
+        verify(gnfService, times(1)).invitaUtente(cfAdmin, cfInvitato);
+    }
+
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_19() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno45")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+
+        assertThrows(Exception.class, () ->gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_9_20() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        when(appoggioRepository.save(any(AppoggioEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio);
+        verify(appoggioRepository, times(1)).save(any(AppoggioEntity.class));
+    }
+
+    @Test
+    @SneakyThrows
+    void testEliminazioneAppoggioTC_M_10_1(){
+
+        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", null));
+
+    }
+
+    @Test
+    @SneakyThrows
+    void testEliminazioneAppoggioTC_M_10_2(){
+
+        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U",2147483647L + 1));
+
+    }
+
+    @Test
+    @SneakyThrows
+    void testEliminazioneAppoggioTC_M_10_3(){
+
+        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", Long.valueOf("11111f1")));
+
+    }
+
+    @Test
+    @SneakyThrows
+    void testEliminazioneAppoggioTC_M_10_4(){
+        assertThrows(Exception.class, () ->gnfService.rimuoviAppoggio("RSSMRA85M01H501U", 1L));
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST CASE SPECIFICATION: UC-M-09 (Aggiunta Appoggio)
+    // -------------------------------------------------------------------------
+
+    /*
+     * TC-M-09.4: Civico troppo corto
+     * Input: Civico = "" (vuoto)
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_04() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("") // Lunghezza non valida < 1 o civico assente
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.5: Civico troppo lungo
+     * Input: Civico = "67598069"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_05() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("67598069") // Lunghezza non valida > 6
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.6: Civico contiene caratteri non validi
+     * Input: Civico = "67-58"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_06() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("67-58") // Civico con caratteri non validi "-"
+                .cap("67489")
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.7: Comune troppo corto
+     * Input: Comune = "P"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_07() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("P") // Lunghezza non valida < 2
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.8: Comune troppo lungo
+     * Input: Comune = 41 caratteri '41 b'
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_08() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb") // lunghezza non valida > 40
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.9: Comune contiene caratteri non validi
+     * Input: Comune = "Pomp£i"
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_09() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("67489")
+                .comune("Pomp£i") // Caratteri non validi
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+    /*
+     * TC-M-09.10: CAP formato non valido
+     * Input: CAP = "674" (non 5 cifre)
+     */
+    @Test
+    @SneakyThrows
+    void testAggiuntaAppoggioTC_M_09_10() {
+
+        AppoggioEntity appoggio = AppoggioEntity.builder()
+                .viaPiazza("Via Sarti")
+                .civico("675")
+                .cap("674") // Cifre non valide < 5
+                .comune("Pompei")
+                .provincia("Napoli")
+                .regione("Campania")
+                .paese("Messigno")
+                .build();
+
+        NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder().id(1L).build();
+
+        UREntity admin = UREntity.builder()
+                .codiceFiscale("RSSMRA85M01H501U")
+                .nucleoFamiliare(nucleo)
+                .build();
+
+        when(urRepository.findByCodiceFiscale(admin.getCodiceFiscale())).thenReturn(admin);
+
+        assertThrows(Exception.class, () -> gnfService.aggiungiAppoggio(admin.getCodiceFiscale(), appoggio));
+    }
+
+}

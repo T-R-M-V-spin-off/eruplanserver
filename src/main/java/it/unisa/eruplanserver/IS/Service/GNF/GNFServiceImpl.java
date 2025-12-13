@@ -4,6 +4,7 @@ import it.unisa.eruplanserver.IS.Entity.GNF.*;
 import it.unisa.eruplanserver.IS.Entity.GUM.UREntity;
 import it.unisa.eruplanserver.IS.Repository.GNF.*;
 import it.unisa.eruplanserver.IS.Repository.GUM.URRepository;
+import it.unisa.eruplanserver.IS.Exception.GNF.ValidationException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class GNFServiceImpl implements GNFService {
     @Autowired
     private AppoggioRepository appoggioRepository;
     @Autowired
-    private ResidenzaRepository residenzaRepository; // nuovo repository per Residenza
+    private ResidenzaRepository residenzaRepository; // repository per Residenza
 
     // RF-GNF.01: Invita una persona
     public void invitaUtente(String cfAdmin, String cfInvitato) throws Exception {
@@ -70,6 +71,61 @@ public class GNFServiceImpl implements GNFService {
 
     // RF-GNF.03: Aggiungi membro manuale
     public void aggiungiMembroManuale(String cfAdmin, MembroEntity membro) throws Exception {
+
+        // =================================================================
+        // VALIDAZIONE NOME (TC_M_03_1, TC_M_03_2, TC_M_03_3)
+        // =================================================================
+        // Prima controlliamo la lunghezza per dare i messaggi specifici richiesti dal test
+        if (Validator.isTroppoCorto(membro.getNome(), 2)) {
+            throw new ValidationException("Nome troppo corto");
+        }
+        if (Validator.isTroppoLungo(membro.getNome(), 30)) {
+            throw new ValidationException("Nome troppo lungo");
+        }
+        // Se la lunghezza è ok, usiamo la Regex originale per controllare SOLO i caratteri validi
+        if (!Validator.isNomeValid(membro.getNome())) {
+            throw new ValidationException("Nome non valido");
+        }
+
+        // =================================================================
+        // VALIDAZIONE COGNOME (TC_M_03_4, TC_M_03_5, TC_M_03_6)
+        // =================================================================
+        if (Validator.isTroppoCorto(membro.getCognome(), 2)) {
+            throw new ValidationException("Cognome troppo corto");
+        }
+        if (Validator.isTroppoLungo(membro.getCognome(), 30)) {
+            throw new ValidationException("Cognome troppo lungo");
+        }
+        if (!Validator.isCognomeValid(membro.getCognome())) {
+            throw new ValidationException("Cognome non valido");
+        }
+
+        // TC_M_03_7: Codice Fiscale
+        if (!Validator.isCodiceFiscaleValid(membro.getCodiceFiscale())) {
+            throw new ValidationException("Codice Fiscale non valido");
+        }
+
+        // Validazione formato data di nascita (dd/MM/yyyy)
+        if (!Validator.isDataNascitaFormatoValid(membro.getDataDiNascita())) {
+            throw new ValidationException("Formato data non valido");
+        }
+
+        // Validazione sesso usando Validator
+        if (!Validator.isSessoValid(membro.getSesso())) {
+            throw new ValidationException("Sesso non valido");
+        }
+
+        // Validazione assistenza
+        if (!Validator.isAssistenzaDefinita(membro.getAssistenza())) {
+            throw new ValidationException("Campo Assistenza non definito");
+        }
+
+        // Validazione minorenne
+        if (!Validator.isMinorenneDefinito(membro.getMinorenne())) {
+            throw new ValidationException("Campo Minore di 14 non definito");
+        }
+
+
         UREntity admin = urRepository.findByCodiceFiscale(cfAdmin);
 
         if (admin.getNucleoFamiliare() == null) throw new Exception("Non hai ancora un nucleo.");
@@ -152,20 +208,81 @@ public class GNFServiceImpl implements GNFService {
             throw new Exception("l'utente fa già parte di un nucleo familiare.");
         }
         if (residenza == null) {
-            throw new Exception("é obbligatorio inserire i dati della residenza.");
+            throw new ValidationException("é obbligatorio inserire i dati della residenza.");
         }
-        if (residenza.getViaPiazza() == null || residenza.getViaPiazza().trim().isEmpty()) {
-            throw new Exception("Il campo via/piazza è obbligatorio.");
+
+        // Validazione via/piazza
+        String via = residenza.getViaPiazza();
+        if (via == null || via.trim().isEmpty()) {
+            throw new ValidationException("Nome via/piazza troppo corto");
         }
+        if (via.length() > 40) {
+            throw new ValidationException("Nome via/piazza troppo lungo");
+        }
+        //validazione per via
+        via=via.trim();
+        if(!via.matches("^[a-zA-Z0-9\\s]+$")) {
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Via/Piazza\"contiene caratteri non validi");
+        }
+
+        // Validazione civico / comune / cap di base
         if (residenza.getCivico() == null || residenza.getCivico().trim().isEmpty()) {
             throw new Exception("il campo civico è obbligatorio.");
+        }
+        String civico=residenza.getCivico();
+        civico=civico.trim();
+        if(civico.length()<1){
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\"è troppo corto");
+        }
+        if(civico.length()>6) {
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\" è troppo lungo");
+        }
+        if(!civico.matches("^[0-9a-zA-Z/\\s]+$")){
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\"contiene caratteri non validi");
         }
         if (residenza.getComune() == null || residenza.getComune().trim().isEmpty()) {
             throw new Exception("il campo comune è obbligatorio.");
         }
+        String comune= residenza.getComune();
+        comune=comune.trim();
+        if(comune.length()<2){
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Comune\" è troppo corto");
+        }
+        if(comune.length()>40){
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Comune\" è troppo lungo");
+        }
+        if(!comune.matches("^\\p{L}+$")){
+            throw new ValidationException("La creazione del nucleo familiare non viene effettuata dato che il campo \"Comune\" contiene caratteri non validi");
+        }
         if (residenza.getCap() == null || residenza.getCap().trim().isEmpty()) {
             throw new Exception("il campo CAP è obbligatorio.");
         }
+
+        // VALIDAZIONE SPECIFICA DEL CAMPO "Paese" (TC-M-08.17 / 08.18 / 08.19 / 08.20)
+        String paese = residenza.getPaese();
+        if (paese == null) {
+            // considerando campo null come troppo corto per rispondere al test frame
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo corto.");
+        }
+        paese = paese.trim();
+
+        // troppo corto
+        if (Validator.isTroppoCorto(paese, 4)) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo corto.");
+        }
+
+        // troppo lungo
+        if (Validator.isTroppoLungo(paese, 40)) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” è troppo lungo.");
+        }
+
+        // caratteri non validi: devono essere solo lettere (inclusi accenti/diacritici)
+        // dopo aver già controllato la lunghezza, qui verifichiamo i caratteri
+        if (!paese.matches("^\\p{L}+$")) {
+            throw new ValidationException("La creazione del nucleo familiare  non viene effettuata dato che il campo “Paese” contiene caratteri non validi.");
+        }
+
+        // Se il veicolo è indicato, controlli su numero posti
         if (hasVeicolo) {
             if (numeroPostiVeicolo == null) {
                 throw new Exception("Specifica il numero di posti che hai nel tuo veicolo.");
@@ -176,10 +293,21 @@ public class GNFServiceImpl implements GNFService {
         } else {
             numeroPostiVeicolo = null;
         }
-        //creazione del nucleo familiare
+
+        //Validazione per l'indirizzo
+        if (!Validator.isIndirizzoValid(
+                residenza.getViaPiazza(), residenza.getCivico(), residenza.getComune(),
+                residenza.getCap(), residenza.getProvincia(), residenza.getRegione(), residenza.getPaese())) {
+            throw new ValidationException("Dati indirizzo non validi.");
+        }
+
+        // Salviamo la residenza esplicitamente per evitare transient state issues
+        ResidenzaEntity residenzaSalvata = residenzaRepository.save(residenza);
+
+        // creazione del nucleo familiare
         NucleoFamiliareEntity nucleo = NucleoFamiliareEntity.builder()
                 .admin(utente)
-                .residenza(residenza)
+                .residenza(residenzaSalvata)
                 .hasVeicolo(hasVeicolo)
                 .numeroPostiVeicolo(numeroPostiVeicolo)
                 .build();

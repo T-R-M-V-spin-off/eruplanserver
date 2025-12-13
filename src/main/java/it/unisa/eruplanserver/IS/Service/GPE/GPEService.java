@@ -1,5 +1,7 @@
 package it.unisa.eruplanserver.IS.Service.GPE;
 
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaPericolo;
+import it.unisa.eruplanserver.IS.Entity.GPE.ZonaSicura;
 import it.unisa.eruplanserver.IS.Exception.GPE.GPEException;
 import org.json.simple.parser.ParseException;
 
@@ -12,5 +14,5 @@ public interface GPEService {
      * @param zoneSicure Dati geometrici delle zone sicure (JSON)
      * @throws GPEException in caso di errori logici o di validazione
      */
-    void generaPiano(String nome, String zonaPericolo, String zoneSicure) throws GPEException;
+    void generaPiano(String nome, ZonaPericolo zonaPericolo, ZonaSicura zoneSicure) throws GPEException;
 }
