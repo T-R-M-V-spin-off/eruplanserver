@@ -8,5 +8,8 @@
 - **Angelo Antonio Prisco** - [AngeloAntonioPrisco](https://github.com/AngeloAntonioPrisco) as PM.
 
 - **Cristian Ranieri** - [CristianRanieri](https://github.com/CristianRanieri) as PM.
+- **Salvatore Grimaldi** - [SalvatoreGrimaldi](https://github.com/salvatoregrimaldi03) as Tester.
+- **Ciro Esposito** - [CiroEsposito](https://github.com/ciroesposito04) as Tester.
+- **Lorenzo Di Riso** - [LorenzoDiRiso](https://github.com/ldiriso4) as Tester.
 
 We are all students at **University of Salerno (UNISA)**. PMs are currently enrolled in the Master's program in **Software Engineering**, while all developers are enrolled in the Bachelor’s degree program in Computer Science.
