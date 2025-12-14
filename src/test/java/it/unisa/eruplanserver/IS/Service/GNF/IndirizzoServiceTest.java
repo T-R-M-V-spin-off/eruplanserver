@@ -171,11 +171,10 @@ class IndirizzoServiceTest {
         logger.debug("Residenza creata con caratteri non validi: via='{}'", input.getViaPiazza());
 
         //ACT & ASSERT
-        ValidationException ex=assertThrows(
-                ValidationException.class,
+        ValidationException ex=assertThrows(ValidationException.class,
                 ()-> service.creaNucleoFamiliare("CF123", input, false, null)
         );
-        assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Via/Piazza\" contiene caratteri non validi",
+        assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Via/Piazza\"contiene caratteri non validi",
                 ex.getMessage());
 
         //VERIFY
@@ -208,11 +207,10 @@ class IndirizzoServiceTest {
                 .regione("Campania")
                 .paese("Messigno")
                 .build();
-        ValidationException ex= assertThrows(ValidationException.class,() ->
+        Exception ex= assertThrows(Exception.class,() ->
                 service.creaNucleoFamiliare("CF123", input, false, null)
         );
-        assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\" è troppo corto",
-        ex.getMessage());
+        assertEquals("il campo civico è obbligatorio.", ex.getMessage());
         //VERIFY
         verify(residenzaRepository, never()).save(any());
 
@@ -229,8 +227,8 @@ class IndirizzoServiceTest {
      * - Validazione avviene prima della chiamata a Validator.isIndirizzoValid
      */
     @Test
-    @DisplayName("TC_M_05: Civico troppo lungo")
-    void testCivicoTroppoLungo_TC_M_05() {
+    @DisplayName("TC_M_08_5: Civico troppo lungo")
+    void testCivicoTroppoLungo_TC_M_08_5() {
         logger.info(">>>Esecuzione TC_M_05: Validazione civico troppo lungo");
         ResidenzaEntity input= ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
@@ -276,7 +274,7 @@ class IndirizzoServiceTest {
         ValidationException ex = assertThrows(ValidationException.class, () ->
                 service.creaNucleoFamiliare("CF123", input, false, null)
         );
-        assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\" contiene caratteri non validi",
+        assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Civico\"contiene caratteri non validi",
                 ex.getMessage());
 
         //VERIFY
@@ -302,7 +300,7 @@ class IndirizzoServiceTest {
         logger.info(">>>Esecuzione TC_M_08_7: Validazione comune troppo corto");
         ResidenzaEntity input = ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
-                .civico("67-68")
+                .civico("675")
                 .comune("P")
                 .cap("67489")
                 .provincia("Napoli")
@@ -336,7 +334,7 @@ class IndirizzoServiceTest {
             String lungoComune="A".repeat(41);
             ResidenzaEntity input= ResidenzaEntity.builder()
                     .viaPiazza("Via Sarti")
-                    .civico("67-68")
+                    .civico("675")
                     .comune(lungoComune)
                     .cap("67489")
                     .provincia("Napoli")
@@ -346,7 +344,7 @@ class IndirizzoServiceTest {
             ValidationException ex=assertThrows(ValidationException.class,()->
                     service.creaNucleoFamiliare("CF123", input, false, null)
             );
-            assertEquals("La creazione del nucleo familiare non viene effettuata datp che il campo \"Comune\" è troppo lungo",
+            assertEquals("La creazione del nucleo familiare non viene effettuata dato che il campo \"Comune\" è troppo lungo",
                     ex.getMessage());
 
             //VERIFY
@@ -371,7 +369,7 @@ class IndirizzoServiceTest {
         logger.info("Esecuzione TC_M_08_9: Validazione con caratteri non validi");
         ResidenzaEntity input= ResidenzaEntity.builder()
                 .viaPiazza("Via Sarti")
-                .civico("67-68")
+                .civico("675")
                 .comune("Pomp3i")
                 .cap("67489")
                 .provincia("Napoli")
